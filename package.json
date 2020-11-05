@@ -1,7 +1,7 @@
 {
-  "name": "simpleTree",
+  "name": "elemenTree",
   "version": "0.1.0",
-  "description": "a simple tree",
+  "description": "a simple tree object",
   "main": "index.html",
   "scripts": {
     "start": "parcel index.html --open",

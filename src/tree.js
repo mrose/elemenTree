@@ -13,6 +13,7 @@ import _isEmpty from 'lodash/isEmpty';
 import _isEqual from 'lodash/isEqual';
 import _isInteger from 'lodash/isInteger';
 import _isString from 'lodash/isString';
+import _isUndefined from 'lodash/isUndefined';
 import _join from 'lodash/join';
 import _last from 'lodash/last';
 import _map from 'lodash/map';
@@ -34,14 +35,14 @@ const PATH_STRING_DELIMITER = '|';
  *
  *
  * roadmap:
- * treeUtils?
  * everyOf, someOf & everybody who is provided a fn should provide [path, datum] entries
  * predecessor not ancestor
  * add test for @throws "path already exists in this distinct tree"
  * when root datum is undefined, returns should not include root & vice versa
- * entries(path), keys(path), & values(path) return non-nested iterators
  * when distinct = true, should get() return just the tip? or assure all returns of paths are arrays
  * merge()
+ * entries(path), keys(path), & values(path) return non-nested iterators
+ * treeUtils?
  *
  * some note about derived paths and unique node ids
  *
@@ -158,7 +159,7 @@ export class Tree {
    * @param {function} fn optional, defaults to _.identity,
    * function to apply to the value of each node
    * receives an entry and tree as arguments
-   * MUST return a datum
+   * MUST return a [path, datum] entry or undefined
    * @param {*} path, optional
    * must be a string, delimited string or array.
    * when undefined, blank, or empty, the root node's path will be utilized.
@@ -167,6 +168,7 @@ export class Tree {
    * when true, the datum for the path itself will also be provided to the function
    * @returns {object} an empty object you can use as a thenable
    * @throws node does not exist, use has?
+   * @throws function provided must return undefined or an [path, datum] entry
    */
   cascade(fn = _identity, path, inclusive = false) {
     path = this.__derive(path);
@@ -174,13 +176,24 @@ export class Tree {
       throw new Error(`node ${path} does not exist, use has?`);
 
     const target = this.__p2s(path);
-    let keys = _filter([...this.__dataMap.keys()], (k) => {
-      if (!inclusive && k === target) return false;
-      return _startsWith(k, target);
+    let entries = _filter([...this.__dataMap.entries()], ([sk, d]) => {
+      if (!inclusive && sk === target) return false;
+      return _startsWith(sk, target);
     });
 
-    _forEach(keys, (sk) => {
-      this.__dataMap.set(sk, fn(this.get(sk), this));
+    _forEach(entries, (entry) => {
+      const ret = fn(entry, this);
+      if (_isUndefined(ret)) return;
+      // entry must be an entry (array with path & datum elements) or undefined
+      if (!_isArray(ret) || ret.length <= 1)
+        throw new Error(`function provided must return an entry`);
+      // we don't know what key we're getting back but we better have it
+      let [p, v] = ret;
+
+      if (!this.has(p)) throw new Error(`node ${p} does not exist, use has?`);
+
+      p = this.__derive(p);
+      this.__dataMap.set(this.__p2s(p), v);
     });
     return {}; // for promise implementations
   }
