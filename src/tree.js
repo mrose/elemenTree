@@ -157,7 +157,7 @@ export class Tree {
    *
    * apply a function to a node's descendents, and optionally to the node
    * @param {function} fn optional, defaults to _.identity,
-   * function to apply to the value of each node
+   * function to apply to each node
    * receives an entry and tree as arguments
    * MUST return a [path, datum] entry or undefined
    * @param {*} path, optional
@@ -165,7 +165,7 @@ export class Tree {
    * when undefined, blank, or empty, the root node's path will be utilized.
    * @param {boolean} inclusive optional
    * defaults to false
-   * when true, the datum for the path itself will also be provided to the function
+   * when true, the entry for the path itself will also be provided to the function
    * @returns {object} an empty object you can use as a thenable
    * @throws node does not exist, use has?
    * @throws function provided must return undefined or an [path, datum] entry
@@ -261,10 +261,10 @@ export class Tree {
     const maxDepth = depth ? p.length + depth : this.depth;
     const target = this.__p2s(p);
 
-    let fe = _filter([...this.__dataMap.entries()], ([k, v]) => {
-      const ak = this.__s2p(k);
-      if (!inclusive && k === target) return false;
-      return _startsWith(k, target) && ak.length <= maxDepth;
+    let fe = _filter([...this.__dataMap.entries()], ([sk, d]) => {
+      const ak = this.__s2p(sk);
+      if (!inclusive && sk === target) return false;
+      return _startsWith(sk, target) && ak.length <= maxDepth;
     });
 
     if (!nested) return _map(fe, ([k, v]) => [this.__p2228t(k), v]);
@@ -296,30 +296,44 @@ export class Tree {
   }
 
   /**
-   * tests whether all qualifying datums pass the test implemented by the provided function
-   * Warning: This method returns true when the qualifiying datums are an empty array
-   * @param {function} fn required,
-   * function to apply to the datum of each node, which MUST return the new datum
+   * tests whether all qualifying entries pass the test implemented by the provided function
+   * WARNING: This method returns true when the qualifiying entries are an empty array
+   * @param {function} fn optional, defaults to _.identity
+   * function to apply to each node
+   * should return truthy or falsey
    * @param {*} path, optional
    * must be a string, delimited string or array.
    * when undefined, blank, or empty, the root node's path will be utilized.
    * @param {boolean} inclusive optional
    * defaults to false
-   * when true, the datum for the path itself will also be provided to the function
+   * when true, the entry for the path itself will also be provided to the function
    * @param {integer} depth optional, defaults to the maximum depth of the tree
    * an integer representing the maximum depth from the path
-   * @returns {boolean} true when all datums in the tree pass the test implemented by the provided function, else false
+   * @returns {boolean} true when all qualifying entries pass the test implemented by the provided function, else false
    * @throws path must be an array or a string
    * @throws node does not exist, use has?
    * @throws depth must be a non-zero integer
    */
   everyOf(fn = _identity, path, inclusive = false, depth) {
-    path = this.__derive(path);
     if (!this.has(path))
       throw new Error(`node ${path} does not exist, use has?`);
-    const nested = false;
-    const values = this.valuesOf(path, inclusive, nested, depth);
-    return _every(values, fn);
+    const p = this.__derive(path);
+
+    if (depth && !_isInteger(depth))
+      throw new Error('depth must be a non-zero integer');
+
+    if (depth === 0) throw new Error('depth must be a non-zero integer');
+
+    const maxDepth = depth ? p.length + depth : this.depth;
+
+    const target = this.__p2s(p);
+    let fe = _filter([...this.__dataMap.entries()], ([sk, d]) => {
+      const ak = this.__s2p(sk);
+      if (!inclusive && sk === target) return false;
+      return _startsWith(sk, target) && ak.length <= maxDepth;
+    });
+
+    return _every(fe, fn);
   }
 
   /**

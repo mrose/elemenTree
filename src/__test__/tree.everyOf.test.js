@@ -3,7 +3,7 @@ import { Tree } from '../tree';
 describe(`The everyOf method`, () => {
   test(`throws on an invalid depth argument`, () => {
     // everyOf(fn, path, inclusive, depth,)
-    const hasAnId = (val) => (val ? val.id && val.id.length : false);
+    const hasAnId = ([k, v]) => (v ? v.id && v.id.length : false);
     const tree = Tree.factory();
 
     expect(() => tree.everyOf(hasAnId, ['a'], true, 'depth')).toThrow();
@@ -14,8 +14,8 @@ describe(`The everyOf method`, () => {
 
   describe(`for trees which have non-distinct node Ids`, () => {
     describe(`where inclusive is true`, () => {
-      test(`tests whether all qualifying datums pass the test implemented by the provided function`, () => {
-        const hasAnId = (val) => (val ? val.id && val.id.length : false);
+      test(`tests whether all qualifying entries pass the test implemented by the provided function`, () => {
+        const hasAnId = ([k, v]) => (v ? v.id && v.id.length : false);
         const tree = Tree.factory({ distinct: false });
         tree.set(['c'], { id: 'c' });
         tree.set(['c', 'd'], { aintGotNoId: true });
@@ -47,8 +47,8 @@ describe(`The everyOf method`, () => {
     });
 
     describe(`where inclusive is false (default)`, () => {
-      test(`tests whether all qualifying datums pass the test implemented by the provided function`, () => {
-        const hasAnId = (val) => (val ? val.id && val.id.length : false);
+      test(`tests whether all qualifying entries pass the test implemented by the provided function`, () => {
+        const hasAnId = ([k, v]) => (v ? v.id && v.id.length : false);
         const tree = Tree.factory({ distinct: false });
 
         // n.b. empty sets return TRUE
@@ -88,8 +88,8 @@ describe(`The everyOf method`, () => {
 
   describe(`for trees which have distinct node Ids`, () => {
     describe(`where inclusive is true`, () => {
-      test(`tests whether all qualifying datums pass the test implemented by the provided function`, () => {
-        const hasAnId = (val) => (val ? val.id && val.id.length : false);
+      test(`tests whether all qualifying entries pass the test implemented by the provided function`, () => {
+        const hasAnId = ([k, v]) => (v ? v.id && v.id.length : false);
         const tree = Tree.factory({ distinct: true });
 
         expect(tree.everyOf(hasAnId, 'root', true)).toBe(false);
@@ -103,7 +103,7 @@ describe(`The everyOf method`, () => {
         tree.set('e', { id: 'e' });
         tree.set('f', { id: 'f' }, 'e');
 
-        expect(tree.everyOf(undefined, '', true)).toBe(false);
+        expect(tree.everyOf(undefined, '', true)).toBe(true);
         expect(tree.everyOf(hasAnId, 'root', true)).toBe(false);
 
         // all depths
@@ -124,8 +124,8 @@ describe(`The everyOf method`, () => {
     });
 
     describe(`where inclusive is false (default)`, () => {
-      test(`tests whether all qualifying datums pass the test implemented by the provided function`, () => {
-        const hasAnId = (val) => (val ? val.id && val.id.length : false);
+      test(`tests whether all qualifying entries pass the test implemented by the provided function`, () => {
+        const hasAnId = ([k, v]) => (v ? v.id && v.id.length : false);
         const tree = Tree.factory({ distinct: true });
         // n.b. empty sets return TRUE
         expect(tree.everyOf(hasAnId, ['root'], false)).toBe(true);

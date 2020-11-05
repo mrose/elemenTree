@@ -80,7 +80,6 @@ describe(`The cascade method`, () => {
         tree.set(['root', 'a', 'd', 'e', 'f'], { id: 'f', value: 7 });
 
         tree.cascade(add10, ['root', 'a', 'd'], false);
-        console.log(`TEST tree.cascade`, tree.__dataMap);
         expect(tree.get(['root'])).toEqual([
           ['root'],
           { id: 'root', value: 1 },
@@ -241,7 +240,6 @@ describe(`The cascade method`, () => {
       test(`simulate reducing behaviour on a node's descendents`, () => {
         function totalToRoot([k, datum], tree) {
           let [rk, rd] = tree.get(['root']);
-          //console.log(`TEST tree.cascade`, rk, rd);
           const id = rd.id;
           const value = rd.value + datum.value;
           return [rk, { id, value }];
