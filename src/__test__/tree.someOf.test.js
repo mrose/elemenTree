@@ -3,7 +3,7 @@ import { Tree } from '../tree';
 describe(`The someOf method`, () => {
   test(`throws on an invalid depth argument`, () => {
     // someOf(fn, path, inclusive, depth,)
-    const hasAnId = (val) => (val ? val.id && val.id.length : false);
+    const hasAnId = ([k, v]) => (v ? v.id && v.id.length : false);
     const tree = Tree.factory();
 
     expect(() => tree.someOf(hasAnId, ['a'], true, 'depth')).toThrow();
@@ -15,7 +15,7 @@ describe(`The someOf method`, () => {
   describe(`for trees which have non-distinct node Ids`, () => {
     describe(`where inclusive is true`, () => {
       test(`tests whether at least one qualifying datum passes the test implemented by the provided function`, () => {
-        const hasAnId = (val) => (val ? val.id && val.id.length : false);
+        const hasAnId = ([k, v]) => (v ? v.id && v.id.length : false);
         const tree = Tree.factory({ distinct: false });
         tree.set(['c'], { id: 'c' });
         tree.set(['c', 'd'], { aintGotNoId: true });
@@ -58,7 +58,7 @@ describe(`The someOf method`, () => {
 
     describe(`where inclusive is false (default)`, () => {
       test(`tests whether at least one qualifying datum passes the test implemented by the provided function`, () => {
-        const hasAnId = (val) => (val ? val.id && val.id.length : false);
+        const hasAnId = ([k, v]) => (v ? v.id && v.id.length : false);
         const tree = Tree.factory({ distinct: false });
 
         expect(tree.someOf(hasAnId, ['root'], false)).toBe(false);
@@ -102,7 +102,7 @@ describe(`The someOf method`, () => {
   describe(`for trees which have distinct node Ids`, () => {
     describe(`where inclusive is true`, () => {
       test(`tests whether at least one qualifying datum passes the test implemented by the provided function`, () => {
-        const hasAnId = (val) => (val ? val.id && val.id.length : false);
+        const hasAnId = ([k, v]) => (v ? v.id && v.id.length : false);
         const tree = Tree.factory({ distinct: true });
 
         expect(tree.someOf(hasAnId, 'root', true)).toBe(false);
@@ -147,7 +147,7 @@ describe(`The someOf method`, () => {
 
     describe(`where inclusive is false (default)`, () => {
       test(`tests whether at least one qualifying datum passes the test implemented by the provided function`, () => {
-        const hasAnId = (val) => (val ? val.id && val.id.length : false);
+        const hasAnId = ([k, v]) => (v ? v.id && v.id.length : false);
         const tree = Tree.factory({ distinct: true });
         // n.b. empty sets return FALSE
         expect(tree.someOf(hasAnId, ['root'], false)).toBe(false);
