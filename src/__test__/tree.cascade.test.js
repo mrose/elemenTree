@@ -23,8 +23,9 @@ describe(`The cascade method`, () => {
   describe(`for trees which have non-distinct node Ids`, () => {
     describe(`where inclusive is false (default)`, () => {
       test(`iterate through a node's descendents`, () => {
+        let visited = [];
         const returnUndefined = ([k, datum], tree) => {
-          // console.log('do something');
+          visited.push(k);
           return undefined;
         };
         const tree = Tree.factory({ distinct: false });
@@ -37,6 +38,11 @@ describe(`The cascade method`, () => {
         tree.set(['root', 'a', 'd', 'e', 'f'], { id: 'f', value: 7 });
 
         tree.cascade(returnUndefined, ['root', 'a', 'd'], false);
+        expect(visited).toEqual([
+          ['root', 'a', 'd', 'e'],
+          ['root', 'a', 'd', 'e', 'f'],
+        ]);
+
         expect(tree.get(['root'])).toEqual([
           ['root'],
           { id: 'root', value: 1 },
@@ -154,8 +160,9 @@ describe(`The cascade method`, () => {
     });
     describe(`where inclusive is true`, () => {
       test(`iterate through a node's descendents`, () => {
+        let visited = [];
         const returnUndefined = ([k, datum], tree) => {
-          // console.log('do something');
+          visited.push(k);
           return undefined;
         };
         const tree = Tree.factory({ distinct: false });
@@ -168,6 +175,13 @@ describe(`The cascade method`, () => {
         tree.set(['root', 'a', 'd', 'e', 'f'], { id: 'f', value: 7 });
 
         tree.cascade(returnUndefined, ['root', 'a', 'd'], true);
+
+        expect(visited).toEqual([
+          ['root', 'a', 'd'],
+          ['root', 'a', 'd', 'e'],
+          ['root', 'a', 'd', 'e', 'f'],
+        ]);
+
         expect(tree.get(['root'])).toEqual([
           ['root'],
           { id: 'root', value: 1 },
@@ -288,8 +302,9 @@ describe(`The cascade method`, () => {
   describe(`for trees which have distinct node Ids`, () => {
     describe(`where inclusive is false (default)`, () => {
       test(`iterate through a node's descendents`, () => {
+        let visited = [];
         const returnUndefined = ([k, datum], tree) => {
-          // console.log('do something');
+          visited.push(k);
           return undefined;
         };
         const tree = Tree.factory({ distinct: true });
@@ -302,6 +317,10 @@ describe(`The cascade method`, () => {
         tree.set('f', { id: 'f', value: 7 }, 'e');
 
         tree.cascade(returnUndefined, 'd', false);
+        expect(visited).toEqual([
+          ['root', 'a', 'd', 'e'],
+          ['root', 'a', 'd', 'e', 'f'],
+        ]);
 
         expect(tree.get('root')).toEqual([['root'], { id: 'root', value: 1 }]);
         expect(tree.get('a')).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
@@ -411,8 +430,9 @@ describe(`The cascade method`, () => {
     });
     describe(`where inclusive is true`, () => {
       test(`iterate through a node's descendents`, () => {
+        let visited = [];
         const returnUndefined = ([k, datum], tree) => {
-          // console.log('do something');
+          visited.push(k);
           return undefined;
         };
         const tree = Tree.factory({ distinct: true });
@@ -425,6 +445,12 @@ describe(`The cascade method`, () => {
         tree.set('f', { id: 'f', value: 7 }, 'e');
 
         tree.cascade(returnUndefined, 'd', true);
+
+        expect(visited).toEqual([
+          ['root', 'a', 'd'],
+          ['root', 'a', 'd', 'e'],
+          ['root', 'a', 'd', 'e', 'f'],
+        ]);
 
         expect(tree.get('root')).toEqual([['root'], { id: 'root', value: 1 }]);
         expect(tree.get('a')).toEqual([['root', 'a'], { id: 'a', value: 2 }]);

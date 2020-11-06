@@ -1,50 +1,282 @@
 import { Tree } from '../tree';
 
-describe(`A tree's traverse method`, () => {
- 
-  test(`applies a function to set of node data`, () => {
-    const tree = Tree.factory();
-    tree.set('root', { key: 'root', value: 1 });
-    tree.set(['a'], { key: 'a', value: 2 });
-    tree.set(['a', 'b'], { key: 'b', value: 3 });
-    tree.set('a|b|c', { key: 'c', value: 4 });
-    tree.set('a|d', { key: 'd', value: 5 });
-    tree.set('a|d|e', { key: 'e', value: 6 });
-    tree.set('a|d|e|f', { key: 'f', value: 7 });
-    const add10 = ([k, v]) => ({ key: v.key, value: v.value + 10 });
-    expect(() => tree.traverse(add10, 'a|b', 'invalid')).toThrow();
-
-    // below also executes the cascade
-    // so we don't need to invoke:    tree.traverse(add10, 'a|d|e|f', 'desc');
-    // an empty object is returned which can be used as a thenable
-    expect(tree.traverse(add10, 'a|d|e|f', 'desc')).toBeInstanceOf(Object);
-
-    expect(tree.get(['root'])).toEqual([['root'], { key: 'root', value: 11 }]);
-    expect(tree.get('a')).toEqual([['root', 'a'], { key: 'a', value: 12 }]);
-    expect(tree.get('a|b')).toEqual([
-      ['root', 'a', 'b'],
-      { key: 'b', value: 3 }
-    ]);
-    expect(tree.get('a|b')).toEqual([
-      ['root', 'a', 'b'],
-      { key: 'b', value: 3 }
-    ]);
-    expect(tree.get('a|b|c')).toEqual([
-      ['root', 'a', 'b', 'c'],
-      { key: 'c', value: 4 }
-    ]);
-    expect(tree.get('a|d')).toEqual([
-      ['root', 'a', 'd'],
-      { key: 'd', value: 15 }
-    ]);
-    expect(tree.get('a|d|e')).toEqual([
-      ['root', 'a', 'd', 'e'],
-      { key: 'e', value: 16 }
-    ]);
-    expect(tree.get('a|d|e|f')).toEqual([
-      ['root', 'a', 'd', 'e', 'f'],
-      { key: 'f', value: 17 }
-    ]);
+describe(`The traverse method`, () => {
+  // fn, path, order
+  test(`throws an error when node does not exist`, () => {
+    const tree1 = Tree.factory();
+    expect(() => tree1.traverse(undefined, ['a'])).toThrow();
   });
- 
+
+  test(`returns an object that can be used as a thenable`, () => {
+    const tree = Tree.factory({ distinct: false });
+    expect(tree.cascade(undefined, ['root'])).toBeInstanceOf(Object);
+  });
+
+  test(`throws an error when order is not one of "asc" or "desc"`, () => {
+    const tree = Tree.factory();
+    expect(() => tree.traverse(undefined, ['root'], true)).toThrow();
+    expect(() => tree.traverse(undefined, ['root'])).toBeInstanceOf(Object);
+    expect(() => tree.traverse(undefined, ['root'], 'asc')).toBeInstanceOf(
+      Object,
+    );
+    expect(() => tree.traverse(undefined, ['root'], 'desc')).toBeInstanceOf(
+      Object,
+    );
+  });
+
+  test(`function defaults to _.identity`);
+
+  describe(`for trees which have non-distinct node Ids`, () => {
+    test(`iterate through a node's path`, () => {
+      const returnUndefined = ([k, datum], tree) => {
+        // console.log('do something');
+        return undefined;
+      };
+      const tree = Tree.factory({ distinct: false });
+      tree.set(['root'], { id: 'root', value: 1 });
+      tree.set(['root', 'a'], { id: 'a', value: 2 });
+      tree.set(['root', 'a', 'b'], { id: 'b', value: 3 });
+      tree.set(['root', 'a', 'b', 'c'], { id: 'c', value: 4 });
+      tree.set(['root', 'a', 'd'], { id: 'd', value: 5 });
+      tree.set(['root', 'a', 'd', 'e'], { id: 'e', value: 6 });
+      tree.set(['root', 'a', 'd', 'e', 'f'], { id: 'f', value: 7 });
+
+      tree.traverse(returnUndefined, ['root', 'a', 'd', 'e', 'f']);
+      expect(tree.get(['root'])).toEqual([['root'], { id: 'root', value: 1 }]);
+      expect(tree.get(['a'])).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
+      expect(tree.get(['a', 'b'])).toEqual([
+        ['root', 'a', 'b'],
+        { id: 'b', value: 3 },
+      ]);
+      expect(tree.get(['a', 'b', 'c'])).toEqual([
+        ['root', 'a', 'b', 'c'],
+        { id: 'c', value: 4 },
+      ]);
+      expect(tree.get(['a', 'd'])).toEqual([
+        ['root', 'a', 'd'],
+        { id: 'd', value: 5 },
+      ]);
+      expect(tree.get(['a', 'd', 'e'])).toEqual([
+        ['root', 'a', 'd', 'e'],
+        { id: 'e', value: 6 },
+      ]);
+      expect(tree.get(['a', 'd', 'e', 'f'])).toEqual([
+        ['root', 'a', 'd', 'e', 'f'],
+        { id: 'f', value: 7 },
+      ]);
+    });
+    test(`apply a function to a node's path`, () => {
+      const add10 = ([k, datum], tree) => {
+        if (!datum) return datum; // best practice: always guard!
+        const { id, value } = datum;
+        const v = value ? value + 10 : value;
+        return [k, { id, value: v }];
+      };
+      const tree = Tree.factory({ distinct: false });
+      tree.set(['root'], { id: 'root', value: 1 });
+      tree.set(['root', 'a'], { id: 'a', value: 2 });
+      tree.set(['root', 'a', 'b'], { id: 'b', value: 3 });
+      tree.set(['root', 'a', 'b', 'c'], { id: 'c', value: 4 });
+      tree.set(['root', 'a', 'd'], { id: 'd', value: 5 });
+      tree.set(['root', 'a', 'd', 'e'], { id: 'e', value: 6 });
+      tree.set(['root', 'a', 'd', 'e', 'f'], { id: 'f', value: 7 });
+
+      tree.traverse(add10, ['a', 'd', 'e']);
+      expect(tree.get(['root'])).toEqual([['root'], { id: 'root', value: 11 }]);
+      expect(tree.get(['a'])).toEqual([['root', 'a'], { id: 'a', value: 12 }]);
+      expect(tree.get(['a', 'b'])).toEqual([
+        ['root', 'a', 'b'],
+        { id: 'b', value: 3 },
+      ]);
+      expect(tree.get(['a', 'b', 'c'])).toEqual([
+        ['root', 'a', 'b', 'c'],
+        { id: 'c', value: 4 },
+      ]);
+      expect(tree.get(['a', 'd'])).toEqual([
+        ['root', 'a', 'd'],
+        { id: 'd', value: 15 },
+      ]);
+      expect(tree.get(['a', 'd', 'e'])).toEqual([
+        ['root', 'a', 'd', 'e'],
+        { id: 'e', value: 16 },
+      ]);
+      expect(tree.get(['a', 'd', 'e', 'f'])).toEqual([
+        ['root', 'a', 'd', 'e', 'f'],
+        { id: 'f', value: 7 },
+      ]);
+    });
+    test(`simulate reducing behaviour on a node's path`, () => {
+      function totalToRoot([k, datum], tree) {
+        let [rk, rd] = tree.get(['root']);
+        const id = rd.id;
+        const value = rd.value + datum.value;
+        return [rk, { id, value }];
+      }
+
+      const tree = Tree.factory({ distinct: false });
+      tree.set(['root'], { id: 'root', value: 1 });
+      tree.set(['root', 'a'], { id: 'a', value: 2 });
+      tree.set(['root', 'a', 'b'], { id: 'b', value: 3 });
+      tree.set(['root', 'a', 'b', 'c'], { id: 'c', value: 4 });
+      tree.set(['root', 'a', 'd'], { id: 'd', value: 5 });
+      tree.set(['root', 'a', 'd', 'e'], { id: 'e', value: 6 });
+      tree.set(['root', 'a', 'd', 'e', 'f'], { id: 'f', value: 7 });
+
+      tree.traverse(totalToRoot, ['root', 'a', 'd']);
+      //(1 + 1 + 2 + 5 = 9)
+      expect(tree.get(['root'])).toEqual([['root'], { id: 'root', value: 9 }]);
+      expect(tree.get(['a'])).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
+      expect(tree.get(['a', 'b'])).toEqual([
+        ['root', 'a', 'b'],
+        { id: 'b', value: 3 },
+      ]);
+      expect(tree.get(['a', 'b', 'c'])).toEqual([
+        ['root', 'a', 'b', 'c'],
+        { id: 'c', value: 4 },
+      ]);
+      expect(tree.get(['a', 'd'])).toEqual([
+        ['root', 'a', 'd'],
+        { id: 'd', value: 5 },
+      ]);
+      expect(tree.get(['a', 'd', 'e'])).toEqual([
+        ['root', 'a', 'd', 'e'],
+        { id: 'e', value: 6 },
+      ]);
+      expect(tree.get(['a', 'd', 'e', 'f'])).toEqual([
+        ['root', 'a', 'd', 'e', 'f'],
+        { id: 'f', value: 7 },
+      ]);
+    });
+  });
+
+  describe(`for trees which have distinct node Ids`, () => {
+    test(`iterate through a node's path`, () => {
+      let visited = [];
+      const returnUndefined = ([k, datum], tree) => {
+        visited.push(k);
+        return undefined;
+      };
+      const tree = Tree.factory({ distinct: true });
+      tree.set('root', { id: 'root', value: 1 });
+      tree.set('a', { id: 'a', value: 2 });
+      tree.set('b', { id: 'b', value: 3 }, 'a');
+      tree.set('c', { id: 'c', value: 4 }, 'b');
+      tree.set('d', { id: 'd', value: 5 }, 'a');
+      tree.set('e', { id: 'e', value: 6 }, 'd');
+      tree.set('f', { id: 'f', value: 7 }, 'e');
+
+      tree.traverse(returnUndefined, 'd', 'desc');
+      expect(visited).toEqual([['root'], ['root', 'a'], ['root', 'a', 'd']]);
+
+      visited = [];
+      tree.traverse(returnUndefined, 'd', 'asc');
+      expect(visited).toEqual([['root', 'a', 'd'], ['root', 'a'], ['root']]);
+
+      expect(tree.get('root')).toEqual([['root'], { id: 'root', value: 1 }]);
+      expect(tree.get('a')).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
+      expect(tree.get('b')).toEqual([
+        ['root', 'a', 'b'],
+        { id: 'b', value: 3 },
+      ]);
+      expect(tree.get('c')).toEqual([
+        ['root', 'a', 'b', 'c'],
+        { id: 'c', value: 4 },
+      ]);
+      expect(tree.get('d')).toEqual([
+        ['root', 'a', 'd'],
+        { id: 'd', value: 5 },
+      ]);
+      expect(tree.get('e')).toEqual([
+        ['root', 'a', 'd', 'e'],
+        { id: 'e', value: 6 },
+      ]);
+      expect(tree.get('f')).toEqual([
+        ['root', 'a', 'd', 'e', 'f'],
+        { id: 'f', value: 7 },
+      ]);
+    });
+    test(`applies a function to a node's path`, () => {
+      const add10 = ([k, datum]) => {
+        if (!datum) return datum; // best practice: always guard!
+        const { id, value } = datum;
+        const v = value ? value + 10 : value;
+        return [k, { id, value: v }];
+      };
+      const tree = Tree.factory({ distinct: true });
+      tree.set('root', { id: 'root', value: 1 });
+      tree.set('a', { id: 'a', value: 2 });
+      tree.set('b', { id: 'b', value: 3 }, 'a');
+      tree.set('c', { id: 'c', value: 4 }, 'b');
+      tree.set('d', { id: 'd', value: 5 }, 'a');
+      tree.set('e', { id: 'e', value: 6 }, 'd');
+      tree.set('f', { id: 'f', value: 7 }, 'e');
+
+      tree.traverse(add10, 'd');
+      expect(tree.get('root')).toEqual([['root'], { id: 'root', value: 11 }]);
+      expect(tree.get('a')).toEqual([['root', 'a'], { id: 'a', value: 12 }]);
+      expect(tree.get('b')).toEqual([
+        ['root', 'a', 'b'],
+        { id: 'b', value: 3 },
+      ]);
+      expect(tree.get('c')).toEqual([
+        ['root', 'a', 'b', 'c'],
+        { id: 'c', value: 4 },
+      ]);
+      expect(tree.get('d')).toEqual([
+        ['root', 'a', 'd'],
+        { id: 'd', value: 15 },
+      ]);
+      expect(tree.get('e')).toEqual([
+        ['root', 'a', 'd', 'e'],
+        { id: 'e', value: 6 },
+      ]);
+      expect(tree.get('f')).toEqual([
+        ['root', 'a', 'd', 'e', 'f'],
+        { id: 'f', value: 7 },
+      ]);
+    });
+    test(`simulate reducing behaviour on a node's path`, () => {
+      function totalToRoot([k, datum], tree) {
+        let [rk, rd] = tree.get(['root']);
+        const id = rd.id;
+        const value = rd.value + datum.value;
+        return [rk, { id, value }];
+      }
+
+      const tree = Tree.factory({ distinct: true });
+      tree.set('root', { id: 'root', value: 1 });
+      tree.set('a', { id: 'a', value: 2 });
+      tree.set('b', { id: 'b', value: 3 }, 'a');
+      tree.set('c', { id: 'c', value: 4 }, 'b');
+      tree.set('d', { id: 'd', value: 5 }, 'a');
+      tree.set('e', { id: 'e', value: 6 }, 'd');
+      tree.set('f', { id: 'f', value: 7 }, 'e');
+
+      tree.traverse(totalToRoot, 'e');
+
+      //(1+2+3+4+5 = 15)
+      expect(tree.get('root')).toEqual([['root'], { id: 'root', value: 15 }]);
+      expect(tree.get('a')).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
+      expect(tree.get('b')).toEqual([
+        ['root', 'a', 'b'],
+        { id: 'b', value: 3 },
+      ]);
+      expect(tree.get('c')).toEqual([
+        ['root', 'a', 'b', 'c'],
+        { id: 'c', value: 4 },
+      ]);
+      expect(tree.get('d')).toEqual([
+        ['root', 'a', 'd'],
+        { id: 'd', value: 5 },
+      ]);
+      expect(tree.get('e')).toEqual([
+        ['root', 'a', 'd', 'e'],
+        { id: 'e', value: 6 },
+      ]);
+      expect(tree.get('f')).toEqual([
+        ['root', 'a', 'd', 'e', 'f'],
+        { id: 'f', value: 7 },
+      ]);
+    });
+  });
 });

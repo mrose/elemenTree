@@ -35,14 +35,14 @@ const PATH_STRING_DELIMITER = '|';
  *
  *
  * roadmap:
- * someOf, traverse should provide [path, datum] entries
- * predecessor not ancestor
+ * depth can be zero when inclusive is true
  * add test for @throws "path already exists in this distinct tree"
  * when root datum is undefined, returns should not include root & vice versa
  * when distinct = true, should get() return just the tip? or assure all returns of paths are arrays
  * merge()
  * entries(path), keys(path), & values(path) return non-nested iterators
  * treeUtils?
+ * predecessor not ancestor?
  *
  * some note about derived paths and unique node ids
  *
@@ -156,6 +156,7 @@ export class Tree {
   /**
    *
    * apply a function to a node's descendents, and optionally to the node
+   * the order of application is NOT guaranteed
    * @param {function} fn optional, defaults to _.identity,
    * function to apply to each node
    * receives an entry and tree as arguments
@@ -171,9 +172,9 @@ export class Tree {
    * @throws function provided must return undefined or an [path, datum] entry
    */
   cascade(fn = _identity, path, inclusive = false) {
-    path = this.__derive(path);
     if (!this.has(path))
       throw new Error(`node ${path} does not exist, use has?`);
+    path = this.__derive(path);
 
     const target = this.__p2s(path);
     let entries = _filter([...this.__dataMap.entries()], ([sk, d]) => {
@@ -182,7 +183,8 @@ export class Tree {
     });
 
     _forEach(entries, (entry) => {
-      const ret = fn(entry, this);
+      const [esk, ev] = entry;
+      const ret = fn([this.__s2p(esk), ev], this);
       if (_isUndefined(ret)) return;
       // entry must be an entry (array with path & datum elements) or undefined
       if (!_isArray(ret) || ret.length <= 1)
@@ -543,29 +545,48 @@ export class Tree {
   /**
    * apply a function to nodes in a path in order
    * @param {function} fn optional, defaults to _identity
-   * function to apply to the value of each node
+   * function to apply to each node
    * receives an entry and tree as arguments
-   * MUST return a datum
-   * @param {array} path optional, defaults to 'root'
+   * MUST return a [path, datum] entry or undefined
+   * @param {*} path, optional
+   * must be a string, delimited string or array.
+   * when undefined, blank, or empty, the root node's path will be utilized.
    * @param {enum} order optional. one of "asc"|"desc" desc means from the root towards descendents. defaults to 'desc'
    * @throws order must be one of "asc, desc"
+   * @throws node does not exist, use has?
+   * @throws function provided must return undefined or an [path, datum] entry
    */
   traverse(fn = _identity, path, order = 'desc') {
-    path = this.__derive(path);
+    if (!this.has(path))
+      throw new Error(`node ${path} does not exist, use has?`);
+
     if (!_includes(['asc', 'desc'], order))
       throw new Error(`order must be one of "asc, desc", was ${order}`);
 
-    // assure that each node in the path exists
-    this.__setIntermediates(path);
+    path = this.__derive(path);
 
     // get keys for each node
-    let ks = _map(path, (v, idx) => _take(path, idx + 1));
+    let keys = _map(path, (v, idx) => _take(path, idx + 1));
+    if (order === 'asc') keys = _reverse(keys);
 
-    if (order === 'asc') ks = _reverse(ks);
+    _forEach(keys, (k) => {
+      const sk = this.__p2s(k);
+      const d = this.__dataMap.get(sk);
+      let entry = [k, d];
 
-    _forEach(ks, (k) =>
-      this.__dataMap.set(this.__p2s(k), fn(this.get(k), this)),
-    );
+      const ret = fn(entry, this);
+      if (_isUndefined(ret)) return;
+      // entry must be an entry (array with path & datum elements) or undefined
+      if (!_isArray(ret) || ret.length <= 1)
+        throw new Error(`function provided must return an entry`);
+      // we don't know what key we're getting back but we better have it
+      let [p, v] = ret;
+
+      if (!this.has(p)) throw new Error(`node ${p} does not exist, use has?`);
+
+      p = this.__derive(p);
+      this.__dataMap.set(this.__p2s(p), v);
+    });
     return {}; // for promise implementations
   }
 
