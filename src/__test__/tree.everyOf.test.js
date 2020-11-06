@@ -1,13 +1,24 @@
 import { Tree } from '../tree';
 
 describe(`The everyOf method`, () => {
-  test(`throws on an invalid depth argument`, () => {
-    // everyOf(fn, path, inclusive, depth,)
+  // everyOf(fn, path, inclusive, depth,)
+  test(`throws an error when depth is not an integer`, () => {
     const hasAnId = ([k, v]) => (v ? v.id && v.id.length : false);
     const tree = Tree.factory();
-
     expect(() => tree.everyOf(hasAnId, ['a'], true, 'depth')).toThrow();
+  });
+
+  test(`throws an error when node for path does not exist`, () => {
+    const hasAnId = ([k, v]) => (v ? v.id && v.id.length : false);
+    const tree = Tree.factory();
     expect(() => tree.everyOf(hasAnId, ['a'], true, 0)).toThrow();
+  });
+
+  test(`throws an error when depth is zero and inclusive is false`, () => {
+    const hasAnId = ([k, v]) => (v ? v.id && v.id.length : false);
+    const tree = Tree.factory();
+    tree.set(['a'], { aintGotNoId: true });
+    expect(() => tree.everyOf(hasAnId, ['a'], false, 0)).toThrow();
   });
 
   // TODO: throws on invalid fn (new truthy fn default), inclusive

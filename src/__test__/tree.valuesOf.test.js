@@ -2,11 +2,17 @@ import { Tree } from '../tree';
 
 describe(`The valuesOf method`, () => {
   // path, inclusive, nested, depth
-  test(`throws an error when depth is zero or not an integer`, () => {
+  test(`throws an error when depth is not an integer`, () => {
     const tree = Tree.factory({ distinct: false });
     tree.set(['a'], { id: 'a' });
     expect(() => tree.valuesOf(['a'], true, false, 'depth')).toThrow();
-    expect(() => tree.valuesOf(['a'], true, false, 0)).toThrow();
+  });
+
+  test(`throws an error when depth is zero and inclusive is false`, () => {
+    const tree = Tree.factory({ distinct: false });
+    tree.set(['a'], { id: 'a' });
+    expect(() => tree.valuesOf(['a'], false, false, 0)).toThrow();
+    expect(tree.valuesOf(['a'], true, false, 0)).toBeInstanceOf(Array);
   });
 
   // TODO: throws when path is invalid, inclusive is invalid, nested is invalid

@@ -249,16 +249,18 @@ export class Tree {
    * NOTE: insertion order is NOT guaranteed
    * @throws path must be an array or a string
    * @throws node does not exist, use has?
-   * @throws depth must be a non-zero integer
+   * @throws depth must be an integer
+   * @throws depth cannot be zero when inclusive is false
    */
 
   entriesOf(path, inclusive = false, nested = false, depth) {
     const p = this.__derive(path);
 
     if (depth && !_isInteger(depth))
-      throw new Error('depth must be a non-zero integer');
+      throw new Error('depth must be an integer');
 
-    if (depth === 0) throw new Error('depth must be a non-zero integer');
+    if (depth === 0 && !inclusive)
+      throw new Error('depth cannot be zero when inclusive is false');
 
     const maxDepth = depth ? p.length + depth : this.depth;
     const target = this.__p2s(p);
@@ -314,7 +316,8 @@ export class Tree {
    * @returns {boolean} true when all qualifying entries pass the test implemented by the provided function, else false
    * @throws path must be an array or a string
    * @throws node does not exist, use has?
-   * @throws depth must be a non-zero integer
+   * @throws depth must be an integer
+   * @throws depth cannot be zero when inclusive is false
    */
   everyOf(fn = _identity, path, inclusive = false, depth) {
     if (!this.has(path))
@@ -322,9 +325,10 @@ export class Tree {
     const p = this.__derive(path);
 
     if (depth && !_isInteger(depth))
-      throw new Error('depth must be a non-zero integer');
+      throw new Error('depth must be an integer');
 
-    if (depth === 0) throw new Error('depth must be a non-zero integer');
+    if (depth === 0 && !inclusive)
+      throw new Error('depth cannot be zero when inclusive is false');
 
     const maxDepth = depth ? p.length + depth : this.depth;
 
@@ -402,16 +406,17 @@ export class Tree {
    * keys will be returned as node ids when the distinct property of the tree is true
    * NOTE: insertion order is NOT guaranteed
    * @throws path must be an array or a string
-   * @throws node does not exist, use has?
-   * @throws depth must be a non-zero integer
+   * @throws depth must be an integer
+   * @throws depth cannot be zero when inclusive is false
    */
   keysOf(path, inclusive = false, nested = false, depth) {
     const p = this.__derive(path);
 
     if (depth && !_isInteger(depth))
-      throw new Error('depth must be a non-zero integer');
+      throw new Error('depth must be an integer');
 
-    if (depth === 0) throw new Error('depth must be a non-zero integer');
+    if (depth === 0 && !inclusive)
+      throw new Error('depth cannot be zero when inclusive is false');
 
     const maxDepth = depth ? p.length + depth : this.depth;
     const target = this.__p2s(p);
@@ -518,7 +523,8 @@ export class Tree {
    * @returns {boolean} true when all datums in the tree pass the test implemented by the provided function, else false
    * @throws path must be an array or a string
    * @throws node does not exist, use has?
-   * @throws depth must be a non-zero integer
+   * @throws depth must be an integer
+   * @throws depth cannot be zero when inclusive is false
    */
   someOf(fn = _identity, path, inclusive = false, depth) {
     if (!this.has(path))
@@ -526,9 +532,10 @@ export class Tree {
     const p = this.__derive(path);
 
     if (depth && !_isInteger(depth))
-      throw new Error('depth must be a non-zero integer');
+      throw new Error('depth must be an integer');
 
-    if (depth === 0) throw new Error('depth must be a non-zero integer');
+    if (depth === 0 && !inclusive)
+      throw new Error('depth cannot be zero when inclusive is false');
 
     const maxDepth = depth ? p.length + depth : this.depth;
 
@@ -605,15 +612,17 @@ export class Tree {
    * NOTE: (insertion order is NOT guaranteed.
    * @throws path must be an array or a string
    * @throws node does not exist, use has?
-   * @throws depth must be a non-zero integer
+   * @throws depth must be an integer
+   * @throws depth cannot be zero when inclusive is false
    */
   valuesOf(path, inclusive = false, nested = false, depth) {
     const p = this.__derive(path);
 
     if (depth && !_isInteger(depth))
-      throw new Error('depth must be a non-zero integer');
+      throw new Error('depth must be an integer');
 
-    if (depth === 0) throw new Error('depth must be a non-zero integer');
+    if (depth === 0 && !inclusive)
+      throw new Error('depth cannot be zero when inclusive is false');
 
     const maxDepth = depth ? p.length + depth : this.depth;
     const target = this.__p2s(p);
