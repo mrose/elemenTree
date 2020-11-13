@@ -37,15 +37,14 @@ const PATH_STRING_DELIMITER = '|';
  *
  *
  * roadmap:
- * getAncestor
- * when root datum is undefined, returns should not include root & vice versa
+ * getAncestor()
  * merge()
+ * when root datum is undefined, returns should not include root & vice versa
  * when distinct = true, should returned paths like get() return just the tip? or assure all returns of paths are arrays
  * entries(path), keys(path), & values(path) return non-nested iterators
  * treeUtils /flow
- * predecessor not ancestor? antecedent, ascendent
- *
- * some note about derived paths and unique node ids
+ * update tests
+ * update documentation, incl some note about derived paths and unique node ids
  *
  */
 export class Tree {
