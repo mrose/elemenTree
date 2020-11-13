@@ -460,12 +460,12 @@ export class Tree {
    * @param {string} ancestor, optional, must be a string, delimited string, or array. Ignored when the path is not provided.
    * @returns {array} the path assigned to the datum
    * @throws "path must be a simple string" when the ancestor provided is not a simple string
-   * @throws elements in a path cannot be empty strings
+   * @throws "elements in a path cannot be empty strings""
    * @throws "ancestor does not exist" when the ancestor is provided is not in the tree
    * @throws "ancestor cannot be used on distinct trees, full node id paths are required"
    * @throws "ancestor must be a simple string or single element array"
    * @throws "path already exists in this distinct tree"
-   * @throws "path has duplicate node ids in this distinct tree"
+   * @throws "elements in a path cannot be duplicated with distinct trees"
    */
   set(path, datum = undefined, ancestor = undefined) {
     let d,
@@ -543,7 +543,7 @@ export class Tree {
         }
         if (_includes(_takeRight(p, p.length - nidx), tip))
           throw new Error(
-            `path ${p} has duplicate node ids in this distinct tree`,
+            `elements in path ${p} cannot be duplicated with distinct trees`,
           );
       });
     } // end of distincty town
