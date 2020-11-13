@@ -9,6 +9,7 @@ import _head from 'lodash-es/head';
 import _last from 'lodash-es/last';
 import _join from 'lodash-es/join';
 import _split from 'lodash-es/split';
+import _tail from 'lodash-es/take';
 import _take from 'lodash-es/take';
 
 // TODO: flatten & meta tests
@@ -68,14 +69,28 @@ export function flatten(entries, acc = []) {
 }
 
 /* static utility function which returns an object of metadata for a provided path.
-  static nodeMeta(path, tree) {
-    const depth = _tail(path).length;
-    return {
-      depth,
-      hasParent: depth > 0,
-      parentPath: _take(path, depth);
-    };
-  */
+/**
+ * metadata
+ */
+export function meta(path, tree) {
+  if (!_isArray(path) || path.length === 0)
+    throw new Error('path must be an array or a string');
+
+  const depth = _tail(path).length;
+  const hasParent = depth > 0;
+  const parentPath = _take(path, depth);
+  const distinctAncestor = !tree.disinct
+    ? null
+    : !hasParent
+    ? undefined
+    : _tail(parentPath);
+  return {
+    depth,
+    distinctAncestor,
+    hasParent,
+    parentPath,
+  };
+}
 
 /**
  * convert an array to a delimited string

@@ -12,6 +12,7 @@ import _isArray from 'lodash/isArray';
 import _isEmpty from 'lodash/isEmpty';
 import _isEqual from 'lodash/isEqual';
 import _isInteger from 'lodash/isInteger';
+import _isNil from 'lodash/isNil';
 import _isString from 'lodash/isString';
 import _isUndefined from 'lodash/isUndefined';
 import _join from 'lodash/join';
@@ -23,6 +24,7 @@ import _split from 'lodash/split';
 import _startsWith from 'lodash/startsWith';
 import _tail from 'lodash/tail';
 import _take from 'lodash/take';
+import _takeRight from 'lodash/takeRight';
 
 // cmon why no static props?
 const ROOT_NODE_ID = 'root';
@@ -35,14 +37,13 @@ const PATH_STRING_DELIMITER = '|';
  *
  *
  * roadmap:
- * depth can be zero when inclusive is true
- * add test for @throws "path already exists in this distinct tree"
+ * getAncestor
  * when root datum is undefined, returns should not include root & vice versa
- * when distinct = true, should get() return just the tip? or assure all returns of paths are arrays
  * merge()
+ * when distinct = true, should returned paths like get() return just the tip? or assure all returns of paths are arrays
  * entries(path), keys(path), & values(path) return non-nested iterators
- * treeUtils?
- * predecessor not ancestor?
+ * treeUtils /flow
+ * predecessor not ancestor? antecedent, ascendent
  *
  * some note about derived paths and unique node ids
  *
@@ -452,58 +453,114 @@ export class Tree {
 
   /**
    * append or update a datum at the path provided
-   * intermediate nodes which do not exist will be provided a datum of undefined
-   * when providing an ancestor, the node will be attached to the FIRST node matching that ancestor
+   * when the path argument is a node id path array, intermediate nodes which do not exist will be provided a datum of undefined
+   * trees whose distinct property is false cannot use the ancestor argument
    * @param {*} path, optional, must be a string, delimited string, array. The root node's datum will be set when a path is not provided.
    * @param {*} datum, optional, value to be associated with the path, defaults to undefined
    * @param {string} ancestor, optional, must be a string, delimited string, or array. Ignored when the path is not provided.
    * @returns {array} the path assigned to the datum
    * @throws "path must be a simple string" when the ancestor provided is not a simple string
+   * @throws elements in a path cannot be empty strings
    * @throws "ancestor does not exist" when the ancestor is provided is not in the tree
    * @throws "ancestor cannot be used on distinct trees, full node id paths are required"
    * @throws "ancestor must be a simple string or single element array"
    * @throws "path already exists in this distinct tree"
+   * @throws "path has duplicate node ids in this distinct tree"
    */
-  set(path, datum = undefined, ancestor) {
-    let p = path;
+  set(path, datum = undefined, ancestor = undefined) {
+    let d,
+      p = path;
     p = this.__derive(p);
+    let exists = this.__dataMap.has(this.__p2s(p));
+    let meta = this.__meta(p);
 
-    if (ancestor && !this.distinct)
-      throw new Error(
-        `ancestor "${ancestor}" cannot be used on non-distinct trees, full node id path for "${path}" is required`,
-      );
+    if (!_isNil(ancestor)) {
+      if (this.distinct) {
+        if (!_isString(ancestor) && !_isArray(ancestor)) {
+          throw new Error(
+            `ancestor must be a simple string or single element array`,
+          );
+        }
 
-    if (ancestor && p.length) {
-      if (p.length > 2)
-        if (this.distinct) {
-          throw new Error(`path ${path} already exists in this distinct tree`);
-        } else {
+        d = _isString(ancestor) ? _castArray(ancestor) : ancestor;
+        if (d.length > 1) {
+          throw new Error(
+            `ancestor must be a simple string or single element array`,
+          );
+        }
+      } else {
+        throw new Error(
+          `ancestor "${ancestor}" cannot be used on non-distinct trees, full node id path for "${path}" is required`,
+        );
+      }
+    }
+
+    if (this.distinct) {
+      if (!_isNil(ancestor)) {
+        if (exists) {
+          // no duplicate node id!
+          d = _isString(ancestor) ? _castArray(ancestor) : ancestor;
+          const ta = this.__p2s(d);
+
+          if (ta !== meta.distinctAncestor) {
+            throw new Error(
+              `path ${path} already exists in this distinct tree with ancestor ${ta}`,
+            );
+          }
+
+          // is it update
+          this.__dataMap.set(this.__p2s(p), datum);
+          return p;
+        }
+
+        // i.e. root + something
+        if (p.length > 2) {
           throw new Error(
             `path must be a simple string, received ${path}, ${datum}, ${ancestor}`,
           );
         }
 
-      let d = _isString(ancestor) ? this.__s2p(ancestor) : ancestor;
-      if (d.length > 1)
-        throw new Error(
-          `ancestor must be a simple string or single element array`,
-        );
-      d = this.__derive(ancestor);
+        // do ancestry now
+        d = this.__derive(ancestor);
+        if (!this.__dataMap.has(this.__p2s(d)))
+          throw new Error(`ancestor ${ancestor} does not exist`);
 
-      if (!_head(d).length)
-        throw new Error(`ancestor ${ancestor} does not exist`);
-      p = _concat(d, _tail(p));
-    }
+        p = _concat(d, _tail(p));
+      }
+
+      // distinctness checks
+      _forEach(p, (tip, i) => {
+        const nidx = i + 1;
+        let k = this.__p2s(_take(p, nidx));
+        let np = this.__derive(tip);
+        let ta = this.__p2s(np);
+        exists = this.__dataMap.has(ta);
+        if (exists & (k !== ta)) {
+          meta = this.__meta(np);
+          throw new Error(
+            `path ${tip} already exists in this distinct tree with ancestor ${meta.distinctAncestor}`,
+          );
+        }
+        if (_includes(_takeRight(p, p.length - nidx), tip))
+          throw new Error(
+            `path ${p} has duplicate node ids in this distinct tree`,
+          );
+      });
+    } // end of distincty town
 
     if (p.length === 1) {
       this.__dataMap.set(this.root_node_id, datum);
       return _castArray(this.root_node_id);
     }
-    if (p.length < 2) return; //throw new Error('nothing to set');
 
-    this.__setIntermediates(p);
+    // set intermediate nodes
+    _forEach(p, (v, i) => {
+      let k = this.__p2s(_take(p, i + 1));
+      if (!this.__dataMap.has(k)) this.__dataMap.set(k, undefined);
+    });
+
     this.__dataMap.set(this.__p2s(p), datum);
-    // we might end up setting an insertion order number/index?
+    // we might end up setting an insertion order number/index/graph coords?
     return p;
   }
 
@@ -663,15 +720,23 @@ export class Tree {
    * @param {*} path, optional, must be a delimited string or array
    * @returns {array} the full path to the node
    * @throws path must be an array or a string
+   * @throws elements in a path cannot be empty strings
    */
   __derive(path = []) {
     if (!_isArray(path) && !_isString(path))
       throw new Error('path must be an array or a string');
 
-    // an empty string or array means the root node path
-    if (!path.length) return this.rootNodePath;
+    if (!path.length)
+      // an empty string or empty array means the root node path
+      return this.rootNodePath;
 
     if (_isString(path)) path = this.__s2p(path);
+
+    // no element in a path can be an empty string
+    if (_some(path, (p) => p.length === 0)) {
+      throw new Error(`elements in a path cannot be empty strings`);
+    }
+
     if (_isEqual(path, this.rootNodePath)) return path;
 
     // internally, the path of a node MUST always begin with the root node path
@@ -701,6 +766,30 @@ export class Tree {
     if (!this.__dataMap.has(this.root_node_id)) return false;
     if (this.__dataMap.get(this.root_node_id) === undefined) return false;
     return true;
+  }
+
+  /**
+   * provide basic metadata for a node
+   * @param {array} path a full node path array
+   */
+  __meta(path = []) {
+    if (!_isArray(path) || path.length === 0)
+      throw new Error('path must be an array or a string');
+
+    const depth = _tail(path).length;
+    const hasParent = depth > 0;
+    const parentPath = _take(path, depth);
+    const distinctAncestor = this.distinct
+      ? hasParent
+        ? _last(parentPath)
+        : undefined
+      : null;
+    return {
+      depth,
+      distinctAncestor,
+      hasParent,
+      parentPath,
+    };
   }
 
   /**
