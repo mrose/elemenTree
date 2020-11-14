@@ -47,19 +47,10 @@ describe(`The getAncestorOf method`, () => {
       tree.set('c', { id: 'c', value: 3 }, 'b');
       tree.set('d', { id: 'd', value: 4 }, 'c');
 
-      expect(tree.getAncestorOf('a')).toEqual([['root'], undefined]);
-      expect(tree.getAncestorOf('b')).toEqual([
-        ['root', 'a'],
-        { id: 'a', value: 1 },
-      ]);
-      expect(tree.getAncestorOf('c')).toEqual([
-        ['root', 'a', 'b'],
-        { id: 'b', value: 2 },
-      ]);
-      expect(tree.getAncestorOf('d')).toEqual([
-        ['root', 'a', 'b', 'c'],
-        { id: 'c', value: 3 },
-      ]);
+      expect(tree.getAncestorOf('a')).toEqual(undefined);
+      expect(tree.getAncestorOf('b')).toEqual({ id: 'a', value: 1 });
+      expect(tree.getAncestorOf('c')).toEqual({ id: 'b', value: 2 });
+      expect(tree.getAncestorOf('d')).toEqual({ id: 'c', value: 3 });
     });
   });
 
@@ -71,19 +62,13 @@ describe(`The getAncestorOf method`, () => {
       tree.set(['a', 'b', 'c'], { id: 'c', value: 3 });
       tree.set(['a', 'b', 'c', 'd'], { id: 'd', value: 4 });
 
-      expect(tree.getAncestorOf(['a'])).toEqual([['root'], undefined]);
-      expect(tree.getAncestorOf('a|b')).toEqual([
-        ['root', 'a'],
-        { id: 'a', value: 1 },
-      ]);
-      expect(tree.getAncestorOf(['a', 'b', 'c'])).toEqual([
-        ['root', 'a', 'b'],
-        { id: 'b', value: 2 },
-      ]);
-      expect(tree.getAncestorOf('a|b|c|d')).toEqual([
-        ['root', 'a', 'b', 'c'],
-        { id: 'c', value: 3 },
-      ]);
+      expect(tree.getAncestorOf(['a'])).toEqual(undefined);
+      expect(tree.getAncestorOf('a|b')).toEqual({ id: 'a', value: 1 });
+      expect(tree.getAncestorOf(['a', 'b', 'c'])).toEqual({
+        id: 'b',
+        value: 2
+      });
+      expect(tree.getAncestorOf('a|b|c|d')).toEqual({ id: 'c', value: 3 });
     });
   });
 });

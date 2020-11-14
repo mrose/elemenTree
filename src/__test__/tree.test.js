@@ -21,13 +21,13 @@ describe(`tree properties`, () => {
   test(`has a rootNodePath property`, () => {
     const tree0 = Tree.factory();
     expect(tree0.rootNodePath).toEqual(['root']);
-    expect(tree0.get('')).toEqual([['root'], undefined]);
-    expect(tree0.get(['root'])).toEqual([['root'], undefined]);
+    expect(tree0.get('')).toEqual(undefined);
+    expect(tree0.get(['root'])).toEqual(undefined);
 
     const tree1 = Tree.factory({ root_node_id: 'qux' });
     expect(tree1.rootNodePath).toEqual(['qux']);
-    expect(tree1.get('')).toEqual([['qux'], undefined]);
-    expect(tree1.get(['qux'])).toEqual([['qux'], undefined]);
+    expect(tree1.get('')).toEqual(undefined);
+    expect(tree1.get(['qux'])).toEqual(undefined);
   });
 
   test(`has a size property`, () => {

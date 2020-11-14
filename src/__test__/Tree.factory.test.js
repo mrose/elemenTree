@@ -24,18 +24,18 @@ describe(`A tree's static factory method`, () => {
 
   test(`may be provided with data for the root node`, () => {
     const tree0 = Tree.factory();
-    expect(tree0.get()).toEqual([['root'], undefined]);
-    expect(tree0.get('root')).toEqual([['root'], undefined]);
-    expect(tree0.get(['root'])).toEqual([['root'], undefined]);
+    expect(tree0.get()).toEqual(undefined);
+    expect(tree0.get('root')).toEqual(undefined);
+    expect(tree0.get(['root'])).toEqual(undefined);
 
     const tree1 = Tree.factory({ datum: 'foo' });
-    expect(tree1.get()).toEqual([['root'], 'foo']);
-    expect(tree1.get('root')).toEqual([['root'], 'foo']);
-    expect(tree1.get(['root'])).toEqual([['root'], 'foo']);
+    expect(tree1.get()).toEqual('foo');
+    expect(tree1.get('root')).toEqual('foo');
+    expect(tree1.get(['root'])).toEqual('foo');
 
     const tree2 = Tree.factory({ datum: { foo: 'bar' } });
-    expect(tree2.get()).toEqual([['root'], { foo: 'bar' }]);
-    expect(tree2.get('root')).toEqual([['root'], { foo: 'bar' }]);
-    expect(tree2.get(['root'])).toEqual([['root'], { foo: 'bar' }]);
+    expect(tree2.get()).toEqual({ foo: 'bar' });
+    expect(tree2.get('root')).toEqual({ foo: 'bar' });
+    expect(tree2.get(['root'])).toEqual({ foo: 'bar' });
   });
 });

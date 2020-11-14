@@ -21,29 +21,11 @@ describe(`The merge method`, () => {
     sourceTree.set('y', { id: 'y', value: 25 }, 'x');
 
     targetTree.merge(sourceTree);
-    expect(targetTree.get(['a'])).toEqual([
-      ['root', 'a'],
-      { id: 'a', value: 11 },
-    ]);
-    expect(targetTree.get('a|b')).toEqual([
-      ['root', 'a', 'b'],
-      { id: 'b', value: 12 },
-    ]);
-    expect(targetTree.get(['a', 'b', 'c'])).toEqual([
-      ['root', 'a', 'b', 'c'],
-      { id: 'c', value: 3 },
-    ]);
-    expect(targetTree.get(['a', 'b', 'c', 'd'])).toEqual([
-      ['root', 'a', 'b', 'c', 'd'],
-      { id: 'd', value: 4 },
-    ]);
-    expect(targetTree.get(['x'])).toEqual([
-      ['root', 'x'],
-      { id: 'x', value: 24 },
-    ]);
-    expect(targetTree.get(['x', 'y'])).toEqual([
-      ['root', 'x', 'y'],
-      { id: 'y', value: 25 },
-    ]);
+    expect(targetTree.get(['a'])).toEqual({ id: 'a', value: 11 });
+    expect(targetTree.get('a|b')).toEqual({ id: 'b', value: 12 });
+    expect(targetTree.get(['a', 'b', 'c'])).toEqual({ id: 'c', value: 3 });
+    expect(targetTree.get(['a', 'b', 'c', 'd'])).toEqual({ id: 'd', value: 4 });
+    expect(targetTree.get(['x'])).toEqual({ id: 'x', value: 24 });
+    expect(targetTree.get(['x', 'y'])).toEqual({ id: 'y', value: 25 });
   });
 });

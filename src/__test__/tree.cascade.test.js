@@ -40,34 +40,16 @@ describe(`The cascade method`, () => {
         tree.cascade(returnUndefined, ['root', 'a', 'd'], false);
         expect(visited).toEqual([
           ['root', 'a', 'd', 'e'],
-          ['root', 'a', 'd', 'e', 'f'],
+          ['root', 'a', 'd', 'e', 'f']
         ]);
 
-        expect(tree.get(['root'])).toEqual([
-          ['root'],
-          { id: 'root', value: 1 },
-        ]);
-        expect(tree.get(['a'])).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
-        expect(tree.get(['a', 'b'])).toEqual([
-          ['root', 'a', 'b'],
-          { id: 'b', value: 3 },
-        ]);
-        expect(tree.get(['a', 'b', 'c'])).toEqual([
-          ['root', 'a', 'b', 'c'],
-          { id: 'c', value: 4 },
-        ]);
-        expect(tree.get(['a', 'd'])).toEqual([
-          ['root', 'a', 'd'],
-          { id: 'd', value: 5 },
-        ]);
-        expect(tree.get(['a', 'd', 'e'])).toEqual([
-          ['root', 'a', 'd', 'e'],
-          { id: 'e', value: 6 },
-        ]);
-        expect(tree.get(['a', 'd', 'e', 'f'])).toEqual([
-          ['root', 'a', 'd', 'e', 'f'],
-          { id: 'f', value: 7 },
-        ]);
+        expect(tree.get(['root'])).toEqual({ id: 'root', value: 1 });
+        expect(tree.get(['a'])).toEqual({ id: 'a', value: 2 });
+        expect(tree.get(['a', 'b'])).toEqual({ id: 'b', value: 3 });
+        expect(tree.get(['a', 'b', 'c'])).toEqual({ id: 'c', value: 4 });
+        expect(tree.get(['a', 'd'])).toEqual({ id: 'd', value: 5 });
+        expect(tree.get(['a', 'd', 'e'])).toEqual({ id: 'e', value: 6 });
+        expect(tree.get(['a', 'd', 'e', 'f'])).toEqual({ id: 'f', value: 7 });
       });
       test(`apply a function to a node's descendents`, () => {
         const add10 = ([k, datum], tree) => {
@@ -86,38 +68,19 @@ describe(`The cascade method`, () => {
         tree.set(['root', 'a', 'd', 'e', 'f'], { id: 'f', value: 7 });
 
         tree.cascade(add10, ['root', 'a', 'd'], false);
-        expect(tree.get(['root'])).toEqual([
-          ['root'],
-          { id: 'root', value: 1 },
-        ]);
-        expect(tree.get(['a'])).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
-        expect(tree.get(['a', 'b'])).toEqual([
-          ['root', 'a', 'b'],
-          { id: 'b', value: 3 },
-        ]);
-        expect(tree.get(['a', 'b', 'c'])).toEqual([
-          ['root', 'a', 'b', 'c'],
-          { id: 'c', value: 4 },
-        ]);
-        expect(tree.get(['a', 'd'])).toEqual([
-          ['root', 'a', 'd'],
-          { id: 'd', value: 5 },
-        ]);
-        expect(tree.get(['a', 'd', 'e'])).toEqual([
-          ['root', 'a', 'd', 'e'],
-          { id: 'e', value: 16 },
-        ]);
-        expect(tree.get(['a', 'd', 'e', 'f'])).toEqual([
-          ['root', 'a', 'd', 'e', 'f'],
-          { id: 'f', value: 17 },
-        ]);
+        expect(tree.get(['root'])).toEqual({ id: 'root', value: 1 });
+        expect(tree.get(['a'])).toEqual({ id: 'a', value: 2 });
+        expect(tree.get(['a', 'b'])).toEqual({ id: 'b', value: 3 });
+        expect(tree.get(['a', 'b', 'c'])).toEqual({ id: 'c', value: 4 });
+        expect(tree.get(['a', 'd'])).toEqual({ id: 'd', value: 5 });
+        expect(tree.get(['a', 'd', 'e'])).toEqual({ id: 'e', value: 16 });
+        expect(tree.get(['a', 'd', 'e', 'f'])).toEqual({ id: 'f', value: 17 });
       });
       test(`simulate reducing behaviour on a node's descendents`, () => {
         function totalToRoot([k, datum], tree) {
-          let [rk, rd] = tree.get(['root']);
-          const id = rd.id;
-          const value = rd.value + datum.value;
-          return [rk, { id, value }];
+          let rd = tree.get(['root']);
+          rd.value = rd.value + datum.value;
+          return ['root', rd];
         }
 
         const tree = Tree.factory({ distinct: false });
@@ -131,31 +94,13 @@ describe(`The cascade method`, () => {
 
         tree.cascade(totalToRoot, ['root'], false);
 
-        expect(tree.get(['root'])).toEqual([
-          ['root'],
-          { id: 'root', value: 28 },
-        ]);
-        expect(tree.get(['a'])).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
-        expect(tree.get(['a', 'b'])).toEqual([
-          ['root', 'a', 'b'],
-          { id: 'b', value: 3 },
-        ]);
-        expect(tree.get(['a', 'b', 'c'])).toEqual([
-          ['root', 'a', 'b', 'c'],
-          { id: 'c', value: 4 },
-        ]);
-        expect(tree.get(['a', 'd'])).toEqual([
-          ['root', 'a', 'd'],
-          { id: 'd', value: 5 },
-        ]);
-        expect(tree.get(['a', 'd', 'e'])).toEqual([
-          ['root', 'a', 'd', 'e'],
-          { id: 'e', value: 6 },
-        ]);
-        expect(tree.get(['a', 'd', 'e', 'f'])).toEqual([
-          ['root', 'a', 'd', 'e', 'f'],
-          { id: 'f', value: 7 },
-        ]);
+        expect(tree.get(['root'])).toEqual({ id: 'root', value: 28 });
+        expect(tree.get(['a'])).toEqual({ id: 'a', value: 2 });
+        expect(tree.get(['a', 'b'])).toEqual({ id: 'b', value: 3 });
+        expect(tree.get(['a', 'b', 'c'])).toEqual({ id: 'c', value: 4 });
+        expect(tree.get(['a', 'd'])).toEqual({ id: 'd', value: 5 });
+        expect(tree.get(['a', 'd', 'e'])).toEqual({ id: 'e', value: 6 });
+        expect(tree.get(['a', 'd', 'e', 'f'])).toEqual({ id: 'f', value: 7 });
       });
     });
     describe(`where inclusive is true`, () => {
@@ -179,34 +124,16 @@ describe(`The cascade method`, () => {
         expect(visited).toEqual([
           ['root', 'a', 'd'],
           ['root', 'a', 'd', 'e'],
-          ['root', 'a', 'd', 'e', 'f'],
+          ['root', 'a', 'd', 'e', 'f']
         ]);
 
-        expect(tree.get(['root'])).toEqual([
-          ['root'],
-          { id: 'root', value: 1 },
-        ]);
-        expect(tree.get(['a'])).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
-        expect(tree.get(['a', 'b'])).toEqual([
-          ['root', 'a', 'b'],
-          { id: 'b', value: 3 },
-        ]);
-        expect(tree.get(['a', 'b', 'c'])).toEqual([
-          ['root', 'a', 'b', 'c'],
-          { id: 'c', value: 4 },
-        ]);
-        expect(tree.get(['a', 'd'])).toEqual([
-          ['root', 'a', 'd'],
-          { id: 'd', value: 5 },
-        ]);
-        expect(tree.get(['a', 'd', 'e'])).toEqual([
-          ['root', 'a', 'd', 'e'],
-          { id: 'e', value: 6 },
-        ]);
-        expect(tree.get(['a', 'd', 'e', 'f'])).toEqual([
-          ['root', 'a', 'd', 'e', 'f'],
-          { id: 'f', value: 7 },
-        ]);
+        expect(tree.get(['root'])).toEqual({ id: 'root', value: 1 });
+        expect(tree.get(['a'])).toEqual({ id: 'a', value: 2 });
+        expect(tree.get(['a', 'b'])).toEqual({ id: 'b', value: 3 });
+        expect(tree.get(['a', 'b', 'c'])).toEqual({ id: 'c', value: 4 });
+        expect(tree.get(['a', 'd'])).toEqual({ id: 'd', value: 5 });
+        expect(tree.get(['a', 'd', 'e'])).toEqual({ id: 'e', value: 6 });
+        expect(tree.get(['a', 'd', 'e', 'f'])).toEqual({ id: 'f', value: 7 });
       });
       test(`applies a function to a node and its descendents`, () => {
         const add10 = ([k, datum]) => {
@@ -225,38 +152,19 @@ describe(`The cascade method`, () => {
         tree.set(['a', 'd', 'e', 'f'], { id: 'f', value: 7 });
 
         tree.cascade(add10, ['root', 'a', 'd'], true);
-        expect(tree.get(['root'])).toEqual([
-          ['root'],
-          { id: 'root', value: 1 },
-        ]);
-        expect(tree.get(['a'])).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
-        expect(tree.get(['a', 'b'])).toEqual([
-          ['root', 'a', 'b'],
-          { id: 'b', value: 3 },
-        ]);
-        expect(tree.get(['a', 'b', 'c'])).toEqual([
-          ['root', 'a', 'b', 'c'],
-          { id: 'c', value: 4 },
-        ]);
-        expect(tree.get(['a', 'd'])).toEqual([
-          ['root', 'a', 'd'],
-          { id: 'd', value: 15 },
-        ]);
-        expect(tree.get(['a', 'd', 'e'])).toEqual([
-          ['root', 'a', 'd', 'e'],
-          { id: 'e', value: 16 },
-        ]);
-        expect(tree.get(['a', 'd', 'e', 'f'])).toEqual([
-          ['root', 'a', 'd', 'e', 'f'],
-          { id: 'f', value: 17 },
-        ]);
+        expect(tree.get(['root'])).toEqual({ id: 'root', value: 1 });
+        expect(tree.get(['a'])).toEqual({ id: 'a', value: 2 });
+        expect(tree.get(['a', 'b'])).toEqual({ id: 'b', value: 3 });
+        expect(tree.get(['a', 'b', 'c'])).toEqual({ id: 'c', value: 4 });
+        expect(tree.get(['a', 'd'])).toEqual({ id: 'd', value: 15 });
+        expect(tree.get(['a', 'd', 'e'])).toEqual({ id: 'e', value: 16 });
+        expect(tree.get(['a', 'd', 'e', 'f'])).toEqual({ id: 'f', value: 17 });
       });
       test(`simulate reducing behaviour on a node's descendents`, () => {
         function totalToRoot([k, datum], tree) {
-          let [rk, rd] = tree.get(['root']);
-          const id = rd.id;
-          const value = rd.value + datum.value;
-          return [rk, { id, value }];
+          let rd = tree.get(['root']);
+          rd.value += datum.value;
+          return ['root', rd];
         }
 
         const tree = Tree.factory({ distinct: false });
@@ -270,31 +178,13 @@ describe(`The cascade method`, () => {
 
         tree.cascade(totalToRoot, ['root'], true);
 
-        expect(tree.get(['root'])).toEqual([
-          ['root'],
-          { id: 'root', value: 29 },
-        ]);
-        expect(tree.get(['a'])).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
-        expect(tree.get(['a', 'b'])).toEqual([
-          ['root', 'a', 'b'],
-          { id: 'b', value: 3 },
-        ]);
-        expect(tree.get(['a', 'b', 'c'])).toEqual([
-          ['root', 'a', 'b', 'c'],
-          { id: 'c', value: 4 },
-        ]);
-        expect(tree.get(['a', 'd'])).toEqual([
-          ['root', 'a', 'd'],
-          { id: 'd', value: 5 },
-        ]);
-        expect(tree.get(['a', 'd', 'e'])).toEqual([
-          ['root', 'a', 'd', 'e'],
-          { id: 'e', value: 6 },
-        ]);
-        expect(tree.get(['a', 'd', 'e', 'f'])).toEqual([
-          ['root', 'a', 'd', 'e', 'f'],
-          { id: 'f', value: 7 },
-        ]);
+        expect(tree.get(['root'])).toEqual({ id: 'root', value: 29 });
+        expect(tree.get(['a'])).toEqual({ id: 'a', value: 2 });
+        expect(tree.get(['a', 'b'])).toEqual({ id: 'b', value: 3 });
+        expect(tree.get(['a', 'b', 'c'])).toEqual({ id: 'c', value: 4 });
+        expect(tree.get(['a', 'd'])).toEqual({ id: 'd', value: 5 });
+        expect(tree.get(['a', 'd', 'e'])).toEqual({ id: 'e', value: 6 });
+        expect(tree.get(['a', 'd', 'e', 'f'])).toEqual({ id: 'f', value: 7 });
       });
     });
   });
@@ -319,31 +209,16 @@ describe(`The cascade method`, () => {
         tree.cascade(returnUndefined, 'd', false);
         expect(visited).toEqual([
           ['root', 'a', 'd', 'e'],
-          ['root', 'a', 'd', 'e', 'f'],
+          ['root', 'a', 'd', 'e', 'f']
         ]);
 
-        expect(tree.get('root')).toEqual([['root'], { id: 'root', value: 1 }]);
-        expect(tree.get('a')).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
-        expect(tree.get('b')).toEqual([
-          ['root', 'a', 'b'],
-          { id: 'b', value: 3 },
-        ]);
-        expect(tree.get('c')).toEqual([
-          ['root', 'a', 'b', 'c'],
-          { id: 'c', value: 4 },
-        ]);
-        expect(tree.get('d')).toEqual([
-          ['root', 'a', 'd'],
-          { id: 'd', value: 5 },
-        ]);
-        expect(tree.get('e')).toEqual([
-          ['root', 'a', 'd', 'e'],
-          { id: 'e', value: 6 },
-        ]);
-        expect(tree.get('f')).toEqual([
-          ['root', 'a', 'd', 'e', 'f'],
-          { id: 'f', value: 7 },
-        ]);
+        expect(tree.get('root')).toEqual({ id: 'root', value: 1 });
+        expect(tree.get('a')).toEqual({ id: 'a', value: 2 });
+        expect(tree.get('b')).toEqual({ id: 'b', value: 3 });
+        expect(tree.get('c')).toEqual({ id: 'c', value: 4 });
+        expect(tree.get('d')).toEqual({ id: 'd', value: 5 });
+        expect(tree.get('e')).toEqual({ id: 'e', value: 6 });
+        expect(tree.get('f')).toEqual({ id: 'f', value: 7 });
       });
       test(`applies a function to a node's descendents`, () => {
         const add10 = ([k, datum]) => {
@@ -362,35 +237,19 @@ describe(`The cascade method`, () => {
         tree.set('f', { id: 'f', value: 7 }, 'e');
 
         tree.cascade(add10, 'd', false);
-        expect(tree.get('root')).toEqual([['root'], { id: 'root', value: 1 }]);
-        expect(tree.get('a')).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
-        expect(tree.get('b')).toEqual([
-          ['root', 'a', 'b'],
-          { id: 'b', value: 3 },
-        ]);
-        expect(tree.get('c')).toEqual([
-          ['root', 'a', 'b', 'c'],
-          { id: 'c', value: 4 },
-        ]);
-        expect(tree.get('d')).toEqual([
-          ['root', 'a', 'd'],
-          { id: 'd', value: 5 },
-        ]);
-        expect(tree.get('e')).toEqual([
-          ['root', 'a', 'd', 'e'],
-          { id: 'e', value: 16 },
-        ]);
-        expect(tree.get('f')).toEqual([
-          ['root', 'a', 'd', 'e', 'f'],
-          { id: 'f', value: 17 },
-        ]);
+        expect(tree.get('root')).toEqual({ id: 'root', value: 1 });
+        expect(tree.get('a')).toEqual({ id: 'a', value: 2 });
+        expect(tree.get('b')).toEqual({ id: 'b', value: 3 });
+        expect(tree.get('c')).toEqual({ id: 'c', value: 4 });
+        expect(tree.get('d')).toEqual({ id: 'd', value: 5 });
+        expect(tree.get('e')).toEqual({ id: 'e', value: 16 });
+        expect(tree.get('f')).toEqual({ id: 'f', value: 17 });
       });
       test(`simulate reducing behaviour on a node's descendents`, () => {
         function totalToRoot([k, datum], tree) {
-          let [rk, rd] = tree.get(['root']);
-          const id = rd.id;
-          const value = rd.value + datum.value;
-          return [rk, { id, value }];
+          let rd = tree.get(['root']);
+          rd.value += datum.value;
+          return ['root', rd];
         }
 
         const tree = Tree.factory({ distinct: true });
@@ -404,28 +263,13 @@ describe(`The cascade method`, () => {
 
         tree.cascade(totalToRoot, ['root'], false);
 
-        expect(tree.get('root')).toEqual([['root'], { id: 'root', value: 28 }]);
-        expect(tree.get('a')).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
-        expect(tree.get('b')).toEqual([
-          ['root', 'a', 'b'],
-          { id: 'b', value: 3 },
-        ]);
-        expect(tree.get('c')).toEqual([
-          ['root', 'a', 'b', 'c'],
-          { id: 'c', value: 4 },
-        ]);
-        expect(tree.get('d')).toEqual([
-          ['root', 'a', 'd'],
-          { id: 'd', value: 5 },
-        ]);
-        expect(tree.get('e')).toEqual([
-          ['root', 'a', 'd', 'e'],
-          { id: 'e', value: 6 },
-        ]);
-        expect(tree.get('f')).toEqual([
-          ['root', 'a', 'd', 'e', 'f'],
-          { id: 'f', value: 7 },
-        ]);
+        expect(tree.get('root')).toEqual({ id: 'root', value: 28 });
+        expect(tree.get('a')).toEqual({ id: 'a', value: 2 });
+        expect(tree.get('b')).toEqual({ id: 'b', value: 3 });
+        expect(tree.get('c')).toEqual({ id: 'c', value: 4 });
+        expect(tree.get('d')).toEqual({ id: 'd', value: 5 });
+        expect(tree.get('e')).toEqual({ id: 'e', value: 6 });
+        expect(tree.get('f')).toEqual({ id: 'f', value: 7 });
       });
     });
     describe(`where inclusive is true`, () => {
@@ -449,31 +293,16 @@ describe(`The cascade method`, () => {
         expect(visited).toEqual([
           ['root', 'a', 'd'],
           ['root', 'a', 'd', 'e'],
-          ['root', 'a', 'd', 'e', 'f'],
+          ['root', 'a', 'd', 'e', 'f']
         ]);
 
-        expect(tree.get('root')).toEqual([['root'], { id: 'root', value: 1 }]);
-        expect(tree.get('a')).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
-        expect(tree.get('b')).toEqual([
-          ['root', 'a', 'b'],
-          { id: 'b', value: 3 },
-        ]);
-        expect(tree.get('c')).toEqual([
-          ['root', 'a', 'b', 'c'],
-          { id: 'c', value: 4 },
-        ]);
-        expect(tree.get('d')).toEqual([
-          ['root', 'a', 'd'],
-          { id: 'd', value: 5 },
-        ]);
-        expect(tree.get('e')).toEqual([
-          ['root', 'a', 'd', 'e'],
-          { id: 'e', value: 6 },
-        ]);
-        expect(tree.get('f')).toEqual([
-          ['root', 'a', 'd', 'e', 'f'],
-          { id: 'f', value: 7 },
-        ]);
+        expect(tree.get('root')).toEqual({ id: 'root', value: 1 });
+        expect(tree.get('a')).toEqual({ id: 'a', value: 2 });
+        expect(tree.get('b')).toEqual({ id: 'b', value: 3 });
+        expect(tree.get('c')).toEqual({ id: 'c', value: 4 });
+        expect(tree.get('d')).toEqual({ id: 'd', value: 5 });
+        expect(tree.get('e')).toEqual({ id: 'e', value: 6 });
+        expect(tree.get('f')).toEqual({ id: 'f', value: 7 });
       });
       test(`applies a function to a node and its descendents`, () => {
         const add10 = ([k, datum]) => {
@@ -492,35 +321,19 @@ describe(`The cascade method`, () => {
         tree.set('f', { id: 'f', value: 7 }, 'e');
 
         tree.cascade(add10, 'd', true);
-        expect(tree.get('root')).toEqual([['root'], { id: 'root', value: 1 }]);
-        expect(tree.get('a')).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
-        expect(tree.get(['a', 'b'])).toEqual([
-          ['root', 'a', 'b'],
-          { id: 'b', value: 3 },
-        ]);
-        expect(tree.get(['a', 'b', 'c'])).toEqual([
-          ['root', 'a', 'b', 'c'],
-          { id: 'c', value: 4 },
-        ]);
-        expect(tree.get(['a', 'd'])).toEqual([
-          ['root', 'a', 'd'],
-          { id: 'd', value: 15 },
-        ]);
-        expect(tree.get(['a', 'd', 'e'])).toEqual([
-          ['root', 'a', 'd', 'e'],
-          { id: 'e', value: 16 },
-        ]);
-        expect(tree.get(['a', 'd', 'e', 'f'])).toEqual([
-          ['root', 'a', 'd', 'e', 'f'],
-          { id: 'f', value: 17 },
-        ]);
+        expect(tree.get('root')).toEqual({ id: 'root', value: 1 });
+        expect(tree.get('a')).toEqual({ id: 'a', value: 2 });
+        expect(tree.get(['a', 'b'])).toEqual({ id: 'b', value: 3 });
+        expect(tree.get(['a', 'b', 'c'])).toEqual({ id: 'c', value: 4 });
+        expect(tree.get(['a', 'd'])).toEqual({ id: 'd', value: 15 });
+        expect(tree.get(['a', 'd', 'e'])).toEqual({ id: 'e', value: 16 });
+        expect(tree.get(['a', 'd', 'e', 'f'])).toEqual({ id: 'f', value: 17 });
       });
       test(`simulate reducing behaviour on a node's descendents`, () => {
         function totalToRoot([k, datum], tree) {
-          let [rk, rd] = tree.get(['root']);
-          const id = rd.id;
-          const value = rd.value + datum.value;
-          return [rk, { id, value }];
+          let rd = tree.get(['root']);
+          rd.value += datum.value;
+          return ['root', rd];
         }
 
         const tree = Tree.factory({ distinct: true });
@@ -534,28 +347,13 @@ describe(`The cascade method`, () => {
 
         tree.cascade(totalToRoot, ['root'], true);
 
-        expect(tree.get('root')).toEqual([['root'], { id: 'root', value: 29 }]);
-        expect(tree.get('a')).toEqual([['root', 'a'], { id: 'a', value: 2 }]);
-        expect(tree.get('b')).toEqual([
-          ['root', 'a', 'b'],
-          { id: 'b', value: 3 },
-        ]);
-        expect(tree.get('c')).toEqual([
-          ['root', 'a', 'b', 'c'],
-          { id: 'c', value: 4 },
-        ]);
-        expect(tree.get('d')).toEqual([
-          ['root', 'a', 'd'],
-          { id: 'd', value: 5 },
-        ]);
-        expect(tree.get('e')).toEqual([
-          ['root', 'a', 'd', 'e'],
-          { id: 'e', value: 6 },
-        ]);
-        expect(tree.get('f')).toEqual([
-          ['root', 'a', 'd', 'e', 'f'],
-          { id: 'f', value: 7 },
-        ]);
+        expect(tree.get('root')).toEqual({ id: 'root', value: 29 });
+        expect(tree.get('a')).toEqual({ id: 'a', value: 2 });
+        expect(tree.get('b')).toEqual({ id: 'b', value: 3 });
+        expect(tree.get('c')).toEqual({ id: 'c', value: 4 });
+        expect(tree.get('d')).toEqual({ id: 'd', value: 5 });
+        expect(tree.get('e')).toEqual({ id: 'e', value: 6 });
+        expect(tree.get('f')).toEqual({ id: 'f', value: 7 });
       });
     });
   });
