@@ -37,11 +37,11 @@ const PATH_STRING_DELIMITER = '|';
  *
  *
  * roadmap:
- * getAncestor()
- * merge()
+ * get() should return just a value or undefined, like map
  * when root datum is undefined, returns should not include root & vice versa
  * when distinct = true, should returned paths like get() return just the tip? or assure all returns of paths are arrays
- * entries(path), keys(path), & values(path) return non-nested iterators
+ * entries(), keys(), & values() return non-nested iterators
+ * update merge() after entries() is native
  * treeUtils /flow
  * update tests
  * update documentation, incl some note about derived paths and unique node ids
@@ -382,6 +382,24 @@ export class Tree {
   }
 
   /**
+   * get a node's ancestor's value
+   * @param {*} path, optional, must be a string, delimited string or array.
+   * when undefined, blank, or empty, the root node's path will be utilized.
+   * @returns the node of the ancestor of the path
+   * @throws path must be an array or string
+   * @throws node does not exist, use has()?
+   * @throws no ancestor exists for root node
+   * for the moment you always get the full node id path back even if disinct
+   */
+  getAncestorOf(path) {
+    if (!this.has(path)) throw new Error(`node does not exist, use has()?`);
+    const { parentPath } = this.__meta(this.__derive(path));
+    if (_isEmpty(parentPath))
+      throw new Error(`no ancestor exists for ${this.root_node_id}`);
+    return this.get(parentPath);
+  }
+
+  /**
    * @param {*} path optional, an array or delimited string, defaults to the root path
    * @returns {boolean} true when the datum for a node exists for the derived path (including undefined), otherwise false
    * @throws path must be an array or string
@@ -448,6 +466,27 @@ export class Tree {
     // base nodes. we won't sort so at least the top nodes will remain in insertion order
     const bn = _filter(fe, (k) => this.__s2p(k).length === mnd);
     return nest(bn);
+  }
+
+  /**
+   * merge a Tree into an existing target Tree
+   * @param {Tree} source
+   * @throws non distinct trees cannot be merged into distinct trees
+   */
+  merge(source) {
+    if (this.disinct && !source.disinct) {
+      throw new Error(
+        `non distinct trees cannot be merged into distinct trees`,
+      );
+    }
+
+    const ies = source.__dataMap.entries();
+    const entries = _.map([...ies], ([k, v]) => [
+      _split(k, source.path_string_delimiter),
+      v,
+    ]);
+    console.log(`tree.merge`, entries);
+    _forEach(entries, ([k, v]) => this.set(k, v));
   }
 
   /**
@@ -722,6 +761,7 @@ export class Tree {
    * @throws elements in a path cannot be empty strings
    */
   __derive(path = []) {
+    console.log(`tree.__derive`, path);
     if (!_isArray(path) && !_isString(path))
       throw new Error('path must be an array or a string');
 
@@ -822,21 +862,5 @@ export class Tree {
    */
   __s2p(pathString = '') {
     return _split(pathString, this.path_string_delimiter);
-  }
-
-  /**
-   * assure that all nodes within a path exist
-   * @access private
-   * @param {array} path, required
-   * n.b since __setIntermediates is a recursive function path coercion,
-   * if required, must precede
-   * @throws path is not an array
-   */
-  __setIntermediates(path) {
-    if (!_isArray(path)) throw new Error('path must be an array');
-    _forEach(path, (v, i) => {
-      let k = this.__p2s(_take(path, i + 1));
-      if (!this.__dataMap.has(k)) this.__dataMap.set(k, undefined);
-    });
   }
 }
