@@ -7,17 +7,6 @@ describe(`The cascade method`, () => {
     expect(() => tree1.cascade(undefined, ['a'], true)).toThrow();
   });
 
-  test(`returns an object that can be used as a thenable`, () => {
-    const add10 = ([k, datum]) => {
-      if (!datum) return datum; // best practice: always guard!
-      const { id, value } = datum;
-      const v = value ? value + 10 : value;
-      return [k, { id, value: v }];
-    };
-    const tree = Tree.factory({ distinct: false });
-    expect(tree.cascade(add10, ['root'], false)).toBeInstanceOf(Object);
-  });
-
   test(`function defaults to _.identity`);
 
   describe(`for trees which have non-distinct node Ids`, () => {
@@ -40,7 +29,7 @@ describe(`The cascade method`, () => {
         tree.cascade(returnUndefined, ['root', 'a', 'd'], false);
         expect(visited).toEqual([
           ['root', 'a', 'd', 'e'],
-          ['root', 'a', 'd', 'e', 'f']
+          ['root', 'a', 'd', 'e', 'f'],
         ]);
 
         expect(tree.get(['root'])).toEqual({ id: 'root', value: 1 });
@@ -124,7 +113,7 @@ describe(`The cascade method`, () => {
         expect(visited).toEqual([
           ['root', 'a', 'd'],
           ['root', 'a', 'd', 'e'],
-          ['root', 'a', 'd', 'e', 'f']
+          ['root', 'a', 'd', 'e', 'f'],
         ]);
 
         expect(tree.get(['root'])).toEqual({ id: 'root', value: 1 });
@@ -209,7 +198,7 @@ describe(`The cascade method`, () => {
         tree.cascade(returnUndefined, 'd', false);
         expect(visited).toEqual([
           ['root', 'a', 'd', 'e'],
-          ['root', 'a', 'd', 'e', 'f']
+          ['root', 'a', 'd', 'e', 'f'],
         ]);
 
         expect(tree.get('root')).toEqual({ id: 'root', value: 1 });
@@ -293,7 +282,7 @@ describe(`The cascade method`, () => {
         expect(visited).toEqual([
           ['root', 'a', 'd'],
           ['root', 'a', 'd', 'e'],
-          ['root', 'a', 'd', 'e', 'f']
+          ['root', 'a', 'd', 'e', 'f'],
         ]);
 
         expect(tree.get('root')).toEqual({ id: 'root', value: 1 });

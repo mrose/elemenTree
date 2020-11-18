@@ -7,20 +7,15 @@ describe(`The traverse method`, () => {
     expect(() => tree1.traverse(undefined, ['a'])).toThrow();
   });
 
-  test(`returns an object that can be used as a thenable`, () => {
-    const tree = Tree.factory({ distinct: false });
-    expect(tree.cascade(undefined, ['root'])).toBeInstanceOf(Object);
-  });
-
   test(`throws an error when order is not one of "asc" or "desc"`, () => {
     const tree = Tree.factory();
     expect(() => tree.traverse(undefined, ['root'], true)).toThrow();
     expect(() => tree.traverse(undefined, ['root'])).toBeInstanceOf(Object);
     expect(() => tree.traverse(undefined, ['root'], 'asc')).toBeInstanceOf(
-      Object
+      Object,
     );
     expect(() => tree.traverse(undefined, ['root'], 'desc')).toBeInstanceOf(
-      Object
+      Object,
     );
   });
 

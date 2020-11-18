@@ -51,23 +51,35 @@ export class Tree {
    *
    * @param {*} datum optional, defaults to undefined
    * the data associated with the root node
+   *
    * @param {string} root_node_id optional, defaults to "root"
    * the name used for the root node
-   * n.b. The root_node_id is set in the constructor and cannot be reset.
+   * n.b. The root_node_id is set in the constructor and cannot be reset
+   *
    * @param {string} path_string_delimiter, optional, defaults to a pipe "|"
    * the internal delimiter for paths ("|")
-   * n.b. The path_string_delimiter is set in the constructor and cannot be reset.
+   * n.b. The path_string_delimiter is set in the constructor and cannot be reset
+   *
    * @param {map} dataMap optional, defaults to a Map
    * internal storage for the tree
+   *
    * @param {boolean} distinct optional, defaults to true
-   * "homogenous" trees have distinct node ids which are never duplicated
-   * when homogenous, distinct should be true and the ancestor attribute is enabled in the set method
-   * when distinct the tree can find nodes by node id alone.
-   * "heterogenous" trees may have the same node id appear in more than one place in the tree structure
-   * when heterogenout, distinct should be false and the ancestor attribute is disabled in the set method
-   * which means that nodes must be provided and referred to with full node id paths
+   * distinct trees have node ids are never duplicated at any depth or breadth within the tree
+   * when distinct is true the ancestor attribute is enabled (but not required) in the set method
+   * because node ids are unique, distinct trees can find nodes by node id alone.
    * i.e. a string which does not contain the path_string_delimiter or a single element array
    *
+   * non distinct trees may have the same node id appear in more than one place in the tree structure
+   * when distinct is false the ancestor attribute is disallowed in the set method
+   * because node ids may appears in multiple places, trees must be provided full node id paths
+   *
+   * @param {string} show_root optional defaults to 'auto'
+   * one of : 'yes', 'no', or 'auto'
+   * when 'yes' the root node is returned in output
+   * when 'no'  the root node is not returned in output
+   * when 'auto' the root node is returned when it's datum is not undefined
+   *
+   * @throws show_root must be one of: 'yes', 'no', or 'auto'
    * n.b. The path_string_delimiter, root_node_id, and distinct properties are set in the constructor and cannot be reset.
    */
   constructor(
@@ -75,29 +87,35 @@ export class Tree {
     root_node_id = ROOT_NODE_ID,
     path_string_delimiter = PATH_STRING_DELIMITER,
     dataMap,
-    distinct = true
+    distinct = true,
+    show_root = 'auto', // yes | no | auto
   ) {
     Object.defineProperty(this, 'path_string_delimiter', {
       configurable: false,
       enumerable: true,
       value: path_string_delimiter,
-      writable: false
+      writable: false,
     });
     Object.defineProperty(this, 'root_node_id', {
       configurable: false,
       enumerable: true,
       value: root_node_id,
-      writable: false
+      writable: false,
     });
     Object.defineProperty(this, 'distinct', {
       configurable: false,
       enumerable: true,
       value: distinct,
-      writable: false
+      writable: false,
     });
 
     this.__dataMap = dataMap || new Map(); //key = path[], value = {data} thar be data
     this.__dataMap.set(root_node_id, datum);
+    if (show_root) {
+      if (!_includes(['yes', 'no', 'auto'], show_root))
+        throw new Error(`show_root must be one of: 'yes', 'no', or 'auto`);
+    }
+    this.show_root = show_root;
   }
 
   /**
@@ -110,14 +128,16 @@ export class Tree {
     root_node_id,
     path_string_delimiter,
     dataMap,
-    distinct
+    distinct,
+    show_root,
   } = {}) {
     return new Tree(
       datum,
       root_node_id,
       path_string_delimiter,
       dataMap,
-      distinct
+      distinct,
+      show_root,
     );
   }
 
@@ -196,7 +216,6 @@ export class Tree {
       p = this.__derive(p);
       this.__dataMap.set(this.__p2s(p), v);
     });
-    return {}; // for promise implementations
   }
 
   /**
@@ -278,12 +297,12 @@ export class Tree {
         const descendents = _filter(
           fe,
           ([k, v]) =>
-            _startsWith(k, tk) && this.__s2p(k).length === ak.length + 1
+            _startsWith(k, tk) && this.__s2p(k).length === ak.length + 1,
         );
         return [
           this.__p2228t(tk),
           v,
-          descendents.length ? nest(descendents) : []
+          descendents.length ? nest(descendents) : [],
         ];
       });
     };
@@ -450,7 +469,7 @@ export class Tree {
         const ak = this.__s2p(tk);
         const descendents = _filter(
           fe,
-          (k) => _startsWith(k, tk) && this.__s2p(k).length === ak.length + 1
+          (k) => _startsWith(k, tk) && this.__s2p(k).length === ak.length + 1,
         );
         return [this.__p2228t(tk), descendents.length ? nest(descendents) : []];
       });
@@ -474,14 +493,14 @@ export class Tree {
   merge(source) {
     if (this.disinct && !source.disinct) {
       throw new Error(
-        `non distinct trees cannot be merged into distinct trees`
+        `non distinct trees cannot be merged into distinct trees`,
       );
     }
 
     const ies = source.__dataMap.entries();
     const entries = _.map([...ies], ([k, v]) => [
       _split(k, source.path_string_delimiter),
-      v
+      v,
     ]);
     _forEach(entries, ([k, v]) => this.set(k, v));
   }
@@ -513,19 +532,19 @@ export class Tree {
       if (this.distinct) {
         if (!_isString(ancestor) && !_isArray(ancestor)) {
           throw new Error(
-            `ancestor must be a simple string or single element array`
+            `ancestor must be a simple string or single element array`,
           );
         }
 
         d = _isString(ancestor) ? _castArray(ancestor) : ancestor;
         if (d.length > 1) {
           throw new Error(
-            `ancestor must be a simple string or single element array`
+            `ancestor must be a simple string or single element array`,
           );
         }
       } else {
         throw new Error(
-          `ancestor "${ancestor}" cannot be used on non-distinct trees, full node id path for "${path}" is required`
+          `ancestor "${ancestor}" cannot be used on non-distinct trees, full node id path for "${path}" is required`,
         );
       }
     }
@@ -539,7 +558,7 @@ export class Tree {
 
           if (ta !== meta.distinctAncestor) {
             throw new Error(
-              `path ${path} already exists in this distinct tree with ancestor ${ta}`
+              `path ${path} already exists in this distinct tree with ancestor ${ta}`,
             );
           }
 
@@ -551,7 +570,7 @@ export class Tree {
         // i.e. root + something
         if (p.length > 2) {
           throw new Error(
-            `path must be a simple string, received ${path}, ${datum}, ${ancestor}`
+            `path must be a simple string, received ${path}, ${datum}, ${ancestor}`,
           );
         }
 
@@ -573,12 +592,12 @@ export class Tree {
         if (exists & (k !== ta)) {
           meta = this.__meta(np);
           throw new Error(
-            `path ${tip} already exists in this distinct tree with ancestor ${meta.distinctAncestor}`
+            `path ${tip} already exists in this distinct tree with ancestor ${meta.distinctAncestor}`,
           );
         }
         if (_includes(_takeRight(p, p.length - nidx), tip))
           throw new Error(
-            `elements in path ${p} cannot be duplicated with distinct trees`
+            `elements in path ${p} cannot be duplicated with distinct trees`,
           );
       });
     } // end of distincty town
@@ -686,7 +705,6 @@ export class Tree {
       p = this.__derive(p);
       this.__dataMap.set(this.__p2s(p), v);
     });
-    return {}; // for promise implementations
   }
 
   /**
@@ -733,7 +751,7 @@ export class Tree {
         const descendents = _filter(
           fe,
           ([k, v]) =>
-            _startsWith(k, tk) && this.__s2p(k).length === ak.length + 1
+            _startsWith(k, tk) && this.__s2p(k).length === ak.length + 1,
         );
         return [v, descendents.length ? nest(descendents) : []];
       });
@@ -786,7 +804,7 @@ export class Tree {
     if (this.distinct && path.length === 2) {
       const np = _find(
         [...this.__dataMap.keys()],
-        (k) => _last(this.__s2p(k)) === _last(path)
+        (k) => _last(this.__s2p(k)) === _last(path),
       );
       if (np && !_isEmpty(np)) path = this.__s2p(np);
     }
@@ -823,7 +841,7 @@ export class Tree {
       depth,
       distinctAncestor,
       hasParent,
-      parentPath
+      parentPath,
     };
   }
 
