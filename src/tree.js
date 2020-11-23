@@ -1,34 +1,34 @@
-import _ from 'lodash';
-import _castArray from 'lodash/castArray';
-import _concat from 'lodash/concat';
-import _every from 'lodash/every';
-import _filter from 'lodash/filter';
-import _find from 'lodash/find';
-import _forEach from 'lodash/forEach';
-import _head from 'lodash/head';
-import _identity from 'lodash/identity';
-import _includes from 'lodash/includes';
-import _isArray from 'lodash/isArray';
-import _isEmpty from 'lodash/isEmpty';
-import _isEqual from 'lodash/isEqual';
-import _isInteger from 'lodash/isInteger';
-import _isNil from 'lodash/isNil';
-import _isString from 'lodash/isString';
-import _isUndefined from 'lodash/isUndefined';
-import _join from 'lodash/join';
-import _last from 'lodash/last';
-import _map from 'lodash/map';
-import _reverse from 'lodash/reverse';
-import _some from 'lodash/some';
-import _split from 'lodash/split';
-import _startsWith from 'lodash/startsWith';
-import _tail from 'lodash/tail';
-import _take from 'lodash/take';
-import _takeRight from 'lodash/takeRight';
+import _ from "lodash";
+import _castArray from "lodash/castArray";
+import _concat from "lodash/concat";
+import _every from "lodash/every";
+import _filter from "lodash/filter";
+import _find from "lodash/find";
+import _forEach from "lodash/forEach";
+import _head from "lodash/head";
+import _identity from "lodash/identity";
+import _includes from "lodash/includes";
+import _isArray from "lodash/isArray";
+import _isEmpty from "lodash/isEmpty";
+import _isEqual from "lodash/isEqual";
+import _isInteger from "lodash/isInteger";
+import _isNil from "lodash/isNil";
+import _isString from "lodash/isString";
+import _isUndefined from "lodash/isUndefined";
+import _join from "lodash/join";
+import _last from "lodash/last";
+import _map from "lodash/map";
+import _reverse from "lodash/reverse";
+import _some from "lodash/some";
+import _split from "lodash/split";
+import _startsWith from "lodash/startsWith";
+import _tail from "lodash/tail";
+import _take from "lodash/take";
+import _takeRight from "lodash/takeRight";
 
 // cmon why no static props?
-const ROOT_NODE_ID = 'root';
-const PATH_STRING_DELIMITER = '|';
+const ROOT_NODE_ID = "root";
+const PATH_STRING_DELIMITER = "|";
 
 /**
  * @classdesc Class representing a tree.
@@ -37,8 +37,6 @@ const PATH_STRING_DELIMITER = '|';
  *
  *
  * roadmap:
- * when root datum is undefined, returns should not include root & vice versa
- * when distinct = true, should returned paths like get() return just the tip? or assure all returns of paths are arrays
  * entries(), keys(), & values() return non-nested iterators
  * update merge() after entries() is native
  * treeUtils /flow
@@ -67,7 +65,8 @@ export class Tree {
    * distinct trees have node ids are never duplicated at any depth or breadth within the tree
    * when distinct is true the ancestor attribute is enabled (but not required) in the set method
    * because node ids are unique, distinct trees can find nodes by node id alone.
-   * i.e. a string which does not contain the path_string_delimiter or a single element array
+   * a node id must always be a string which does not contain the path_string_delimiter or a single element array
+   * distinct trees never use node id paths
    *
    * non distinct trees may have the same node id appear in more than one place in the tree structure
    * when distinct is false the ancestor attribute is disallowed in the set method
@@ -75,9 +74,10 @@ export class Tree {
    *
    * @param {string} show_root optional defaults to 'auto'
    * one of : 'yes', 'no', or 'auto'
-   * when 'yes' the root node is returned in output
-   * when 'no'  the root node is not returned in output
-   * when 'auto' the root node is returned when it's datum is not undefined
+   * applies to non distinct trees only
+   * when 'yes' the root node is included in node id paths
+   * when 'no'  the root node is not included in node id paths
+   * when 'auto' the root node is included when it's datum is not undefined
    *
    * @throws show_root must be one of: 'yes', 'no', or 'auto'
    * n.b. The path_string_delimiter, root_node_id, and distinct properties are set in the constructor and cannot be reset.
@@ -88,32 +88,36 @@ export class Tree {
     path_string_delimiter = PATH_STRING_DELIMITER,
     dataMap,
     distinct = true,
-    show_root = 'auto', // yes | no | auto
+    show_root = "auto" // yes | no | auto
   ) {
-    Object.defineProperty(this, 'path_string_delimiter', {
+    //    Object.defineProperty(this, 'path_string_delimiter', {
+    //      get: function() {
+    //        return path_string_delimiter;
+    //      }
+    //    });
+    Object.defineProperty(this, "path_string_delimiter", {
       configurable: false,
       enumerable: true,
       value: path_string_delimiter,
-      writable: false,
+      writable: false
     });
-    Object.defineProperty(this, 'root_node_id', {
+    Object.defineProperty(this, "root_node_id", {
       configurable: false,
       enumerable: true,
       value: root_node_id,
-      writable: false,
+      writable: false
     });
-    Object.defineProperty(this, 'distinct', {
+    Object.defineProperty(this, "distinct", {
       configurable: false,
       enumerable: true,
       value: distinct,
-      writable: false,
+      writable: false
     });
 
     this.__dataMap = dataMap || new Map(); //key = path[], value = {data} thar be data
     this.__dataMap.set(root_node_id, datum);
     if (show_root) {
-      if (!_includes(['yes', 'no', 'auto'], show_root))
-        throw new Error(`show_root must be one of: 'yes', 'no', or 'auto`);
+      if (!_includes(["yes", "no", "auto"], show_root)) this.__excp(3);
     }
     this.show_root = show_root;
   }
@@ -129,7 +133,7 @@ export class Tree {
     path_string_delimiter,
     dataMap,
     distinct,
-    show_root,
+    show_root
   } = {}) {
     return new Tree(
       datum,
@@ -137,7 +141,7 @@ export class Tree {
       path_string_delimiter,
       dataMap,
       distinct,
-      show_root,
+      show_root
     );
   }
 
@@ -191,27 +195,26 @@ export class Tree {
    * @throws function provided must return undefined or an [path, datum] entry
    */
   cascade(fn = _identity, path, inclusive = false) {
-    if (!this.has(path))
-      throw new Error(`node ${path} does not exist, use has?`);
+    if (!this.has(path)) this.__excp(4, { path });
     path = this.__derive(path);
 
     const target = this.__p2s(path);
-    let entries = _filter([...this.__dataMap.entries()], ([sk, d]) => {
+    let fe = _filter([...this.__dataMap.entries()], ([sk, d]) => {
       if (!inclusive && sk === target) return false;
       return _startsWith(sk, target);
     });
+    fe = _.map(fe, ([k, v]) => [this.__p2228t(k), v]);
 
-    _forEach(entries, (entry) => {
-      const [esk, ev] = entry;
-      const ret = fn([this.__s2p(esk), ev], this);
+    _forEach(fe, (entry) => {
+      const [ek, ev] = entry;
+      const ret = fn([ek, ev], this);
       if (_isUndefined(ret)) return;
       // entry must be an entry (array with path & datum elements) or undefined
-      if (!_isArray(ret) || ret.length <= 1)
-        throw new Error(`function provided must return an entry`);
+      if (!_isArray(ret) || ret.length <= 1) this.__excp(5);
+
       // we don't know what key we're getting back but we better have it
       let [p, v] = ret;
-
-      if (!this.has(p)) throw new Error(`node ${p} does not exist, use has?`);
+      if (!this.has(p)) this.__excp(4, { path: p });
 
       p = this.__derive(p);
       this.__dataMap.set(this.__p2s(p), v);
@@ -274,15 +277,12 @@ export class Tree {
   entriesOf(path, inclusive = false, nested = false, depth) {
     const p = this.__derive(path);
 
-    if (depth && !_isInteger(depth))
-      throw new Error('depth must be an integer');
+    if (depth && !_isInteger(depth)) this.__excp(6);
 
-    if (depth === 0 && !inclusive)
-      throw new Error('depth cannot be zero when inclusive is false');
+    if (depth === 0 && !inclusive) this.__excp(7);
 
     const maxDepth = depth ? p.length + depth : this.depth;
     const target = this.__p2s(p);
-
     let fe = _filter([...this.__dataMap.entries()], ([sk, d]) => {
       const ak = this.__s2p(sk);
       if (!inclusive && sk === target) return false;
@@ -297,12 +297,12 @@ export class Tree {
         const descendents = _filter(
           fe,
           ([k, v]) =>
-            _startsWith(k, tk) && this.__s2p(k).length === ak.length + 1,
+            _startsWith(k, tk) && this.__s2p(k).length === ak.length + 1
         );
         return [
           this.__p2228t(tk),
           v,
-          descendents.length ? nest(descendents) : [],
+          descendents.length ? nest(descendents) : []
         ];
       });
     };
@@ -338,15 +338,12 @@ export class Tree {
    * @throws depth cannot be zero when inclusive is false
    */
   everyOf(fn = _identity, path, inclusive = false, depth) {
-    if (!this.has(path))
-      throw new Error(`node ${path} does not exist, use has?`);
+    if (!this.has(path)) this.__excp(4, { path });
     const p = this.__derive(path);
 
-    if (depth && !_isInteger(depth))
-      throw new Error('depth must be an integer');
+    if (depth && !_isInteger(depth)) this.__excp(6);
 
-    if (depth === 0 && !inclusive)
-      throw new Error('depth cannot be zero when inclusive is false');
+    if (depth === 0 && !inclusive) this.__excp(7);
 
     const maxDepth = depth ? p.length + depth : this.depth;
 
@@ -356,6 +353,7 @@ export class Tree {
       if (!inclusive && sk === target) return false;
       return _startsWith(sk, target) && ak.length <= maxDepth;
     });
+    fe = _.map(fe, ([k, v]) => [this.__p2228t(k), v]);
 
     return _every(fe, fn);
   }
@@ -387,13 +385,13 @@ export class Tree {
    * get a node's value
    * @param {*} path, optional, must be a string, delimited string or array.
    * when undefined, blank, or empty, the root node's path will be utilized.
-   * @returns the node at the path
+   * @returns the datum at the path
    * @throws path must be an array or string
    * @throws node does not exist, use has()?
-   * since the value of a node could be undefined, we throw
+   * unlike the map api, an exception is thrown because the value of a node is allowed to be undefined
    */
   get(path) {
-    if (!this.has(path)) throw new Error(`node does not exist, use has()?`);
+    if (!this.has(path)) this.__excp(4, { path });
     const p = this.__derive(path);
     return this.__dataMap.get(this.__p2s(p));
   }
@@ -402,17 +400,16 @@ export class Tree {
    * get a node's ancestor's value
    * @param {*} path, optional, must be a string, delimited string or array.
    * when undefined, blank, or empty, the root node's path will be utilized.
-   * @returns the node of the ancestor of the path
+   * @returns the datum of the ancestor of the path
    * @throws path must be an array or string
    * @throws node does not exist, use has()?
    * @throws no ancestor exists for root node
    * for the moment you always get the full node id path back even if disinct
    */
   getAncestorOf(path) {
-    if (!this.has(path)) throw new Error(`node does not exist, use has()?`);
+    if (!this.has(path)) this.__excp(4, { path });
     const { parentPath } = this.__meta(this.__derive(path));
-    if (_isEmpty(parentPath))
-      throw new Error(`no ancestor exists for ${this.root_node_id}`);
+    if (_isEmpty(parentPath)) this.__excp(8, { path: this.root_node_id });
     return this.get(parentPath);
   }
 
@@ -447,11 +444,9 @@ export class Tree {
   keysOf(path, inclusive = false, nested = false, depth) {
     const p = this.__derive(path);
 
-    if (depth && !_isInteger(depth))
-      throw new Error('depth must be an integer');
+    if (depth && !_isInteger(depth)) this.__excp(6);
 
-    if (depth === 0 && !inclusive)
-      throw new Error('depth cannot be zero when inclusive is false');
+    if (depth === 0 && !inclusive) this.__excp(7);
 
     const maxDepth = depth ? p.length + depth : this.depth;
     const target = this.__p2s(p);
@@ -469,7 +464,7 @@ export class Tree {
         const ak = this.__s2p(tk);
         const descendents = _filter(
           fe,
-          (k) => _startsWith(k, tk) && this.__s2p(k).length === ak.length + 1,
+          (k) => _startsWith(k, tk) && this.__s2p(k).length === ak.length + 1
         );
         return [this.__p2228t(tk), descendents.length ? nest(descendents) : []];
       });
@@ -491,16 +486,12 @@ export class Tree {
    * @throws non distinct trees cannot be merged into distinct trees
    */
   merge(source) {
-    if (this.disinct && !source.disinct) {
-      throw new Error(
-        `non distinct trees cannot be merged into distinct trees`,
-      );
-    }
+    if (this.disinct && !source.disinct) this.__excp(9);
 
     const ies = source.__dataMap.entries();
     const entries = _.map([...ies], ([k, v]) => [
       _split(k, source.path_string_delimiter),
-      v,
+      v
     ]);
     _forEach(entries, ([k, v]) => this.set(k, v));
   }
@@ -529,24 +520,12 @@ export class Tree {
     let meta = this.__meta(p);
 
     if (!_isNil(ancestor)) {
-      if (this.distinct) {
-        if (!_isString(ancestor) && !_isArray(ancestor)) {
-          throw new Error(
-            `ancestor must be a simple string or single element array`,
-          );
-        }
+      if (!this.distinct) this.__excp(11, { ancestor, path });
 
-        d = _isString(ancestor) ? _castArray(ancestor) : ancestor;
-        if (d.length > 1) {
-          throw new Error(
-            `ancestor must be a simple string or single element array`,
-          );
-        }
-      } else {
-        throw new Error(
-          `ancestor "${ancestor}" cannot be used on non-distinct trees, full node id path for "${path}" is required`,
-        );
-      }
+      if (!_isString(ancestor) && !_isArray(ancestor)) this.__excp(10);
+
+      d = _isString(ancestor) ? _castArray(ancestor) : ancestor;
+      if (d.length > 1) this.__excp(10);
     }
 
     if (this.distinct) {
@@ -556,28 +535,20 @@ export class Tree {
           d = _isString(ancestor) ? _castArray(ancestor) : ancestor;
           const ta = this.__p2s(d);
 
-          if (ta !== meta.distinctAncestor) {
-            throw new Error(
-              `path ${path} already exists in this distinct tree with ancestor ${ta}`,
-            );
-          }
+          if (ta !== meta.distinctAncestor)
+            this.__excp(12, { path, ancestor: ta });
 
           // is it update
           this.__dataMap.set(this.__p2s(p), datum);
-          return p;
+          return this.__p2228t(p);
         }
 
         // i.e. root + something
-        if (p.length > 2) {
-          throw new Error(
-            `path must be a simple string, received ${path}, ${datum}, ${ancestor}`,
-          );
-        }
+        if (p.length > 2) this.__excp(14, { path, datum, ancestor });
 
         // do ancestry now
         d = this.__derive(ancestor);
-        if (!this.__dataMap.has(this.__p2s(d)))
-          throw new Error(`ancestor ${ancestor} does not exist`);
+        if (!this.__dataMap.has(this.__p2s(d))) this.__excp(15, { ancestor });
 
         p = _concat(d, _tail(p));
       }
@@ -591,14 +562,10 @@ export class Tree {
         exists = this.__dataMap.has(ta);
         if (exists & (k !== ta)) {
           meta = this.__meta(np);
-          throw new Error(
-            `path ${tip} already exists in this distinct tree with ancestor ${meta.distinctAncestor}`,
-          );
+          this.__excp(12, { path: tip, ancestor: meta.distinctAncestor });
         }
         if (_includes(_takeRight(p, p.length - nidx), tip))
-          throw new Error(
-            `elements in path ${p} cannot be duplicated with distinct trees`,
-          );
+          this.__excp(16, { path: p });
       });
     } // end of distincty town
 
@@ -615,7 +582,7 @@ export class Tree {
 
     this.__dataMap.set(this.__p2s(p), datum);
     // we might end up setting an insertion order number/index/graph coords?
-    return p;
+    return this.__p2228t(p);
   }
 
   /**
@@ -638,15 +605,12 @@ export class Tree {
    * @throws depth cannot be zero when inclusive is false
    */
   someOf(fn = _identity, path, inclusive = false, depth) {
-    if (!this.has(path))
-      throw new Error(`node ${path} does not exist, use has?`);
+    if (!this.has(path)) this.__excp(4, { path });
     const p = this.__derive(path);
 
-    if (depth && !_isInteger(depth))
-      throw new Error('depth must be an integer');
+    if (depth && !_isInteger(depth)) this.__excp(6);
 
-    if (depth === 0 && !inclusive)
-      throw new Error('depth cannot be zero when inclusive is false');
+    if (depth === 0 && !inclusive) this.__excp(7);
 
     const maxDepth = depth ? p.length + depth : this.depth;
 
@@ -656,6 +620,7 @@ export class Tree {
       if (!inclusive && sk === target) return false;
       return _startsWith(sk, target) && ak.length <= maxDepth;
     });
+    fe = _.map(fe, ([k, v]) => [this.__p2228t(k), v]);
 
     return _some(fe, fn);
   }
@@ -674,33 +639,30 @@ export class Tree {
    * @throws node does not exist, use has?
    * @throws function provided must return undefined or an [path, datum] entry
    */
-  traverse(fn = _identity, path, order = 'desc') {
-    if (!this.has(path))
-      throw new Error(`node ${path} does not exist, use has?`);
+  traverse(fn = _identity, path, order = "desc") {
+    if (!this.has(path)) this.__excp(4, { path });
 
-    if (!_includes(['asc', 'desc'], order))
-      throw new Error(`order must be one of "asc, desc", was ${order}`);
+    if (!_includes(["asc", "desc"], order)) this.__excp(17, { order });
 
     path = this.__derive(path);
 
     // get keys for each node
     let keys = _map(path, (v, idx) => _take(path, idx + 1));
-    if (order === 'asc') keys = _reverse(keys);
+    if (order === "asc") keys = _reverse(keys);
 
     _forEach(keys, (k) => {
       const sk = this.__p2s(k);
       const d = this.__dataMap.get(sk);
-      let entry = [k, d];
+      let entry = [this.__p2228t(k), d];
 
       const ret = fn(entry, this);
       if (_isUndefined(ret)) return;
       // entry must be an entry (array with path & datum elements) or undefined
-      if (!_isArray(ret) || ret.length <= 1)
-        throw new Error(`function provided must return an entry`);
+      if (!_isArray(ret) || ret.length <= 1) this.__excp(5);
+
       // we don't know what key we're getting back but we better have it
       let [p, v] = ret;
-
-      if (!this.has(p)) throw new Error(`node ${p} does not exist, use has?`);
+      if (!this.has(p)) this.__excp(4, { path: p });
 
       p = this.__derive(p);
       this.__dataMap.set(this.__p2s(p), v);
@@ -728,19 +690,17 @@ export class Tree {
   valuesOf(path, inclusive = false, nested = false, depth) {
     const p = this.__derive(path);
 
-    if (depth && !_isInteger(depth))
-      throw new Error('depth must be an integer');
+    if (depth && !_isInteger(depth)) this.__excp(6);
 
-    if (depth === 0 && !inclusive)
-      throw new Error('depth cannot be zero when inclusive is false');
+    if (depth === 0 && !inclusive) this.__excp(7);
 
     const maxDepth = depth ? p.length + depth : this.depth;
     const target = this.__p2s(p);
 
-    let fe = _filter([...this.__dataMap.entries()], ([k, v]) => {
-      const ak = this.__s2p(k);
-      if (!inclusive && k === target) return false;
-      return _startsWith(k, target) && ak.length <= maxDepth;
+    let fe = _filter([...this.__dataMap.entries()], ([sk, d]) => {
+      const ak = this.__s2p(sk);
+      if (!inclusive && sk === target) return false;
+      return _startsWith(sk, target) && ak.length <= maxDepth;
     });
 
     if (!nested) return _map(fe, ([k, v]) => v);
@@ -751,7 +711,7 @@ export class Tree {
         const descendents = _filter(
           fe,
           ([k, v]) =>
-            _startsWith(k, tk) && this.__s2p(k).length === ak.length + 1,
+            _startsWith(k, tk) && this.__s2p(k).length === ak.length + 1
         );
         return [v, descendents.length ? nest(descendents) : []];
       });
@@ -776,8 +736,7 @@ export class Tree {
    * @throws elements in a path cannot be empty strings
    */
   __derive(path = []) {
-    if (!_isArray(path) && !_isString(path))
-      throw new Error('path must be an array or a string');
+    if (!_isArray(path) && !_isString(path)) this.__excp(1);
 
     if (!path.length)
       // an empty string or empty array means the root node path
@@ -786,9 +745,7 @@ export class Tree {
     if (_isString(path)) path = this.__s2p(path);
 
     // no element in a path can be an empty string
-    if (_some(path, (p) => p.length === 0)) {
-      throw new Error(`elements in a path cannot be empty strings`);
-    }
+    if (_some(path, (p) => p.length === 0)) this.__excp(2);
 
     if (_isEqual(path, this.rootNodePath)) return path;
 
@@ -804,12 +761,40 @@ export class Tree {
     if (this.distinct && path.length === 2) {
       const np = _find(
         [...this.__dataMap.keys()],
-        (k) => _last(this.__s2p(k)) === _last(path),
+        (k) => _last(this.__s2p(k)) === _last(path)
       );
       if (np && !_isEmpty(np)) path = this.__s2p(np);
     }
 
     return path;
+  }
+
+  /**
+   * throw an error
+   * @param {integer} id, required, id of the message
+   */
+  __excp(id, opts = {}) {
+    const m = {
+      1: `path must be an array or a string`,
+      2: `elements in a path cannot be empty strings`,
+      3: `show_root must be one of: 'yes', 'no', or 'auto`,
+      4: `path ${opts.path} does not exist, use has?`,
+      5: `function provided must return a node entry`,
+      6: `depth must be an integer`,
+      7: `depth cannot be zero when inclusive is false`,
+      8: `no ancestor exists for ${opts.path}`,
+      9: `non distinct trees cannot be merged into distinct trees`,
+      10: `ancestor must be a simple string or single element array`,
+      11: `ancestor ${opts.ancestor} cannot be used on non-distinct trees, full node id path for ${opts.path} is required`,
+      12: `path ${opts.path} already exists in this distinct tree with ancestor ${opts.ancestor}`,
+      14: `path must be a simple string, received ${opts.path}, ${opts.datum}, ${opts.ancestor}`,
+      15: `ancestor ${opts.ancestor} does not exist`,
+      16: `elements in path ${opts.path} cannot be duplicated with distinct trees`,
+      17: `order must be one of "asc, desc", was ${opts.order}`,
+      42: `all persons more than a mile high to leave the court`
+    };
+    const e = id in m ? m[id] : "invalid exception";
+    throw new Error(e);
   }
 
   /**
@@ -826,8 +811,7 @@ export class Tree {
    * @param {array} path a full node path array
    */
   __meta(path = []) {
-    if (!_isArray(path) || path.length === 0)
-      throw new Error('path must be an array or a string');
+    if (!_isArray(path) || path.length === 0) this.__excp(1);
 
     const depth = _tail(path).length;
     const hasParent = depth > 0;
@@ -841,7 +825,7 @@ export class Tree {
       depth,
       distinctAncestor,
       hasParent,
-      parentPath,
+      parentPath
     };
   }
 
@@ -857,16 +841,19 @@ export class Tree {
   /**
    *
    * @param {*} path
-   * @returns a single node id or a path or node ids
+   * @returns a single node id or a node id path
    */
   __p2228t(path = []) {
     // probably unnecessary guard
-    if (!_isArray(path) && !_isString(path))
-      throw new Error('path must be an array or a string');
+    if (!_isArray(path) && !_isString(path)) this.__excp(1);
+    let p = _isString(path) ? this.__s2p(path) : path;
+    const tip = _last(p);
+    const show =
+      this.show_root === "auto"
+        ? !!this.__dataMap.get(this.root_node_id)
+        : this.show_root === "yes";
 
-    const p = _isString(path) ? this.__s2p(path) : path;
-
-    return this.distinct ? _last(p) : p;
+    return this.distinct ? tip : show ? p : p.length === 1 ? [] : _tail(p);
   }
 
   /**
@@ -874,7 +861,7 @@ export class Tree {
    * @access private
    * @param {string} pathString (delimited)
    */
-  __s2p(pathString = '') {
+  __s2p(pathString = "") {
     return _split(pathString, this.path_string_delimiter);
   }
 }

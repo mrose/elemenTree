@@ -66,6 +66,25 @@ describe(`The keysOf method`, () => {
       tree.set(['a', 'e', 'g'], { id: 'g' });
 
       expect(tree.keysOf(['a'], true, false, 1)).toEqual([
+        ['a'],
+        ['a', 'd'],
+        ['a', 'e'],
+      ]);
+
+      expect(tree.keysOf(['a'], false, false)).toEqual([
+        ['a', 'd'],
+        ['a', 'e'],
+        ['a', 'e', 'f'],
+        ['a', 'e', 'g'],
+      ]);
+
+      expect(tree.keysOf(['a', 'e'], false, false)).toEqual([
+        ['a', 'e', 'f'],
+        ['a', 'e', 'g'],
+      ]);
+
+      tree.show_root = 'yes';
+      expect(tree.keysOf(['a'], true, false, 1)).toEqual([
         ['root', 'a'],
         ['root', 'a', 'd'],
         ['root', 'a', 'e'],
@@ -143,6 +162,29 @@ describe(`The keysOf method`, () => {
           ],
         ],
       ]);
+
+      tree.show_root = 'no';
+      expect(tree.keysOf('root', true, true)).toEqual([
+        [[],[
+            [['c'], []],
+            [['b'], []],
+            [
+              ['a'],
+              [
+                [['a', 'd'], [[['a', 'd', 'h'], []]]],
+                [
+                  ['a', 'e'],
+                  [
+                    [['a', 'e', 'f'], []],
+                    [['a', 'e', 'g'], []],
+                  ],
+                ],
+              ],
+            ],
+          ],
+        ],
+      ]);
+
     });
   });
 

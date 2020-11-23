@@ -114,11 +114,11 @@ describe(`The traverse method`, () => {
       tree.set('f', { id: 'f', value: 7 }, 'e');
 
       tree.traverse(returnUndefined, 'd', 'desc');
-      expect(visited).toEqual([['root'], ['root', 'a'], ['root', 'a', 'd']]);
+      expect(visited).toEqual(['root', 'a', 'd']);
 
       visited = [];
       tree.traverse(returnUndefined, 'd', 'asc');
-      expect(visited).toEqual([['root', 'a', 'd'], ['root', 'a'], ['root']]);
+      expect(visited).toEqual(['d', 'a', 'root']);
 
       expect(tree.get('root')).toEqual({ id: 'root', value: 1 });
       expect(tree.get('a')).toEqual({ id: 'a', value: 2 });
