@@ -1,7 +1,7 @@
 {
   "name": "elemenTree",
   "version": "0.1.0",
-  "description": "a simple tree object",
+  "description": "a simple tree",
   "main": "index.html",
   "scripts": {
     "start": "parcel index.html --open",
@@ -14,7 +14,8 @@
   },
   "devDependencies": {
     "@babel/core": "7.2.0",
-    "parcel-bundler": "^1.6.1"
+    "parcel-bundler": "^1.6.1",
+    "jsdoc": "~3.5.5"
   },
   "keywords": ["tree"]
 }
