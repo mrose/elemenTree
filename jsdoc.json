@@ -1,0 +1,10 @@
+{
+  "plugins": [],
+  "sourceType": "module",
+  "source": {
+    "include": ["./src/tree.js"]
+  },
+  "opts": {
+      "destination": "./doc/"
+  }
+}
