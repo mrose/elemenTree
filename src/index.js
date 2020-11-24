@@ -1,11 +1,11 @@
-import './styles.css';
-import { Tree } from './tree';
+import "./styles.css";
+import { Tree } from "./tree";
 //import { Dump } from 'react-dump';
 
 //const tree = Tree.factory();
 
-document.getElementById('app').innerHTML = `
-<h1>Hello Vanilla!</h1>
+document.getElementById("app").innerHTML = `
+<div id="header"/>
 <div>
   We use the same configuration as Parcel to bundle this sandbox, you can find more
   info about Parcel 
