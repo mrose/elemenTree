@@ -1,24 +1,22 @@
 {
   "name": "elemenTree",
-  "version": "0.1.0",
   "description": "a simple tree object",
-  "main": "index.html",
-  "scripts": {
-    "start": "parcel index.html --open",
-    "build": "parcel build index.html",
-    "doc": "./node_modules/.bin/jsdoc -c ./jsdoc.json"
-  },
-  "dependencies": {
-    "lodash": "4.17.15",
-    "mobx": "5.15.6",
-    "react-dump": "0.3.3"
-  },
+  "version": "0.2.0",
+  "repository": "mrose/elemenTree/",
+  "keywords": ["tree"],
+  "main": "index.js",
+  "files": ["index.js"],
   "devDependencies": {
     "@babel/core": "7.2.0",
     "jsdoc": "~3.6.6",
+    "lodash": "4.17.15",
+    "nodemon": "1.18.4",
     "parcel-bundler": "^1.6.1"
   },
-  "keywords": [
-    "tree"
-  ]
+  "scripts": {
+    "dev": "parcel src/index.js",
+    "start": "nodemon src/index.js",
+    "build": "parcel build index.js",
+    "doc:build": "jsdoc -c ./jsdoc.json"
+  }
 }

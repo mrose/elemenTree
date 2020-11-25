@@ -30,7 +30,17 @@
     
         <h2><span class="attribs"><span class="type-signature"></span></span>Tree<span class="signature">(datum, root_node_id, path_string_delimiter,, dataMap, distinct, show_root)</span><span class="type-signature"></span></h2>
         
-            <div class="class-description">Class representing a tree.paths provided to the tree must strings or arrays of stringspaths are not required to include the root node idroadmap:entries(), keys(), & values() return non-nested iteratorsupdate merge() after entries() is nativetreeUtils /flowupdate testsupdate documentation, incl some note about derived paths and unique node ids</div>
+            <div class="class-description">Class representing a tree.
+paths provided to the tree must strings or arrays of strings
+paths are not required to include the root node id
+
+
+roadmap:
+entries(), keys(), & values() return non-nested iterators
+update merge() after entries() is native
+treeUtils /flow
+update tests
+update documentation, incl some note about derived paths and unique node ids</div>
         
     
 </header>
@@ -101,7 +111,8 @@
 
             
 
-            <td class="description last">optional, defaults to undefinedthe data associated with the root node</td>
+            <td class="description last">optional, defaults to undefined
+the data associated with the root node</td>
         </tr>
 
     
@@ -121,10 +132,11 @@
             </td>
 
             
+           
 
-            
-
-            <td class="description last">optional, defaults to "root"the name used for the root noden.b. The root_node_id is set in the constructor and cannot be reset</td>
+            <td class="description last">optional, defaults to "root"
+the name used for the root node
+n.b. The root_node_id is set in the constructor and cannot be reset</td>
         </tr>
 
     
@@ -147,7 +159,9 @@
 
             
 
-            <td class="description last">optional, defaults to a pipe "|"the internal delimiter for paths ("|")n.b. The path_string_delimiter is set in the constructor and cannot be reset</td>
+            <td class="description last">optional, defaults to a pipe "|"
+the internal delimiter for paths ("|")
+n.b. The path_string_delimiter is set in the constructor and cannot be reset</td>
         </tr>
 
     
@@ -170,7 +184,8 @@
 
             
 
-            <td class="description last">optional, defaults to a Mapinternal storage for the tree</td>
+            <td class="description last">optional, defaults to a Map
+internal storage for the tree</td>
         </tr>
 
     
@@ -193,7 +208,16 @@
 
             
 
-            <td class="description last">optional, defaults to truedistinct trees have node ids are never duplicated at any depth or breadth within the treewhen distinct is true the ancestor attribute is enabled (but not required) in the set methodbecause node ids are unique, distinct trees can find nodes by node id alone.a node id must always be a string which does not contain the path_string_delimiter or a single element arraydistinct trees never use node id pathsnon distinct trees may have the same node id appear in more than one place in the tree structurewhen distinct is false the ancestor attribute is disallowed in the set methodbecause node ids may appears in multiple places, trees must be provided full node id paths</td>
+            <td class="description last">optional, defaults to true
+distinct trees have node ids are never duplicated at any depth or breadth within the tree
+when distinct is true the ancestor attribute is enabled (but not required) in the set method
+because node ids are unique, distinct trees can find nodes by node id alone.
+a node id must always be a string which does not contain the path_string_delimiter or a single element array
+distinct trees never use node id paths
+
+non distinct trees may have the same node id appear in more than one place in the tree structure
+when distinct is false the ancestor attribute is disallowed in the set method
+because node ids may appears in multiple places, trees must be provided full node id paths</td>
         </tr>
 
     
@@ -216,7 +240,12 @@
 
             
 
-            <td class="description last">optional defaults to 'auto'one of : 'yes', 'no', or 'auto'applies to non distinct trees onlywhen 'yes' the root node is included in node id pathswhen 'no'  the root node is not included in node id pathswhen 'auto' the root node is included when it's datum is not undefined</td>
+            <td class="description last">optional defaults to 'auto'
+one of : 'yes', 'no', or 'auto'
+applies to non distinct trees only
+when 'yes' the root node is included in node id paths
+when 'no'  the root node is not included in node id paths
+when 'auto' the root node is included when it's datum is not undefined</td>
         </tr>
 
     
@@ -286,7 +315,8 @@
 
     <div class="param-desc">
     
-        show_root must be one of: 'yes', 'no', or 'auto'n.b. The path_string_delimiter, root_node_id, and distinct properties are set in the constructor and cannot be reset.
+        show_root must be one of: 'yes', 'no', or 'auto'
+n.b. The path_string_delimiter, root_node_id, and distinct properties are set in the constructor and cannot be reset.
     
     </div>
 
@@ -1182,7 +1212,8 @@
 
 
 <div class="description">
-    apply a function to a node's descendents, and optionally to the nodethe order of application is NOT guaranteed
+    apply a function to a node's descendents, and optionally to the node
+the order of application is NOT guaranteed
 </div>
 
 
@@ -1234,7 +1265,10 @@
 
             
 
-            <td class="description last">optional, defaults to _.identity,function to apply to each nodereceives an entry and tree as argumentsMUST return a [path, datum] entry or undefined</td>
+            <td class="description last">optional, defaults to _.identity,
+function to apply to each node
+receives an entry and tree as arguments
+MUST return a [path, datum] entry or undefined</td>
         </tr>
 
     
@@ -1257,7 +1291,9 @@
 
             
 
-            <td class="description last">optionalmust be a string, delimited string or array.when undefined, blank, or empty, the root node's path will be utilized.</td>
+            <td class="description last">optional
+must be a string, delimited string or array.
+when undefined, blank, or empty, the root node's path will be utilized.</td>
         </tr>
 
     
@@ -1280,7 +1316,9 @@
 
             
 
-            <td class="description last">optionaldefaults to falsewhen true, the entry for the path itself will also be provided to the function</td>
+            <td class="description last">optional
+defaults to false
+when true, the entry for the path itself will also be provided to the function</td>
         </tr>
 
     
@@ -1567,7 +1605,8 @@
 
             
 
-            <td class="description last">optional, must be a string, delimited string or array.when undefined, blank, or empty, the root node's path will be utilized.</td>
+            <td class="description last">optional, must be a string, delimited string or array.
+when undefined, blank, or empty, the root node's path will be utilized.</td>
         </tr>
 
     
@@ -1590,7 +1629,8 @@
 
             
 
-            <td class="description last">optional, defaults to true the entry for the path itself will be included in the group to be deleted</td>
+            <td class="description last">optional, defaults to true
+ the entry for the path itself will be included in the group to be deleted</td>
         </tr>
 
     
@@ -1745,7 +1785,8 @@
 
             
 
-            <td class="description last">optional, must be a string, delimited string or array.when undefined, blank, or empty, the root node's path will be utilized.</td>
+            <td class="description last">optional, must be a string, delimited string or array.
+when undefined, blank, or empty, the root node's path will be utilized.</td>
         </tr>
 
     
@@ -1768,7 +1809,8 @@
 
             
 
-            <td class="description last">optional, defaults to false the entry entry for the path itself will be included</td>
+            <td class="description last">optional, defaults to false
+ the entry entry for the path itself will be included</td>
         </tr>
 
     
@@ -1791,7 +1833,8 @@
 
             
 
-            <td class="description last">optional, defaults to falsedefines how the output array is returned</td>
+            <td class="description last">optional, defaults to false
+defines how the output array is returned</td>
         </tr>
 
     
@@ -1814,7 +1857,8 @@
 
             
 
-            <td class="description last">optional, defaults to the maximum depth of the treean integer representing the maximum depth from the path</td>
+            <td class="description last">optional, defaults to the maximum depth of the tree
+an integer representing the maximum depth from the path</td>
         </tr>
 
     
@@ -1926,7 +1970,10 @@
 
         
 <div class="param-desc">
-    when nested is false returns an array of [key, datum] entrieswhen nested is true returns a nested array of [key, datum, descendents] entrieskeys will be returned as node ids when the distinct property of the tree is trueNOTE: insertion order is NOT guaranteed
+    when nested is false returns an array of [key, datum] entries
+when nested is true returns a nested array of [key, datum, descendents] entries
+keys will be returned as node ids when the distinct property of the tree is true
+NOTE: insertion order is NOT guaranteed
 </div>
 
 
@@ -1963,7 +2010,8 @@
 
 
 <div class="description">
-    tests whether all qualifying entries pass the test implemented by the provided functionWARNING: This method returns true when the qualifiying entries are an empty array
+    tests whether all qualifying entries pass the test implemented by the provided function
+WARNING: This method returns true when the qualifiying entries are an empty array
 </div>
 
 
@@ -2015,7 +2063,9 @@
 
             
 
-            <td class="description last">optional, defaults to _.identityfunction to apply to each nodeshould return truthy or falsey</td>
+            <td class="description last">optional, defaults to _.identity
+function to apply to each node
+should return truthy or falsey</td>
         </tr>
 
     
@@ -2038,7 +2088,9 @@
 
             
 
-            <td class="description last">optionalmust be a string, delimited string or array.when undefined, blank, or empty, the root node's path will be utilized.</td>
+            <td class="description last">optional
+must be a string, delimited string or array.
+when undefined, blank, or empty, the root node's path will be utilized.</td>
         </tr>
 
     
@@ -2061,7 +2113,9 @@
 
             
 
-            <td class="description last">optionaldefaults to falsewhen true, the entry for the path itself will also be provided to the function</td>
+            <td class="description last">optional
+defaults to false
+when true, the entry for the path itself will also be provided to the function</td>
         </tr>
 
     
@@ -2084,7 +2138,8 @@
 
             
 
-            <td class="description last">optional, defaults to the maximum depth of the treean integer representing the maximum depth from the path</td>
+            <td class="description last">optional, defaults to the maximum depth of the tree
+an integer representing the maximum depth from the path</td>
         </tr>
 
     
@@ -2281,7 +2336,8 @@
 
             
 
-            <td class="description last">optional, must be a string, delimited string or array.when undefined, blank, or empty, the root node's path will be used.</td>
+            <td class="description last">optional, must be a string, delimited string or array.
+when undefined, blank, or empty, the root node's path will be used.</td>
         </tr>
 
     
@@ -2373,7 +2429,8 @@
 
         
 <div class="param-desc">
-    a flat array of [key, datum] entries for the immediate descendents ot the key requestedNOTE: insertion order is not guaranteed
+    a flat array of [key, datum] entries for the immediate descendents ot the key requested
+NOTE: insertion order is not guaranteed
 </div>
 
 
@@ -2462,7 +2519,8 @@
 
             
 
-            <td class="description last">optional, must be a string, delimited string or array.when undefined, blank, or empty, the root node's path will be utilized.</td>
+            <td class="description last">optional, must be a string, delimited string or array.
+when undefined, blank, or empty, the root node's path will be utilized.</td>
         </tr>
 
     
@@ -2542,7 +2600,8 @@
 
     <div class="param-desc">
     
-        node does not exist, use has()?unlike the map api, an exception is thrown because the value of a node is allowed to be undefined
+        node does not exist, use has()?
+unlike the map api, an exception is thrown because the value of a node is allowed to be undefined
     
     </div>
 
@@ -2631,7 +2690,8 @@
 
             
 
-            <td class="description last">optional, must be a string, delimited string or array.when undefined, blank, or empty, the root node's path will be utilized.</td>
+            <td class="description last">optional, must be a string, delimited string or array.
+when undefined, blank, or empty, the root node's path will be utilized.</td>
         </tr>
 
     
@@ -2721,7 +2781,8 @@
 
     <div class="param-desc">
     
-        no ancestor exists for root nodefor the moment you always get the full node id path back even if disinct
+        no ancestor exists for root node
+for the moment you always get the full node id path back even if disinct
     
     </div>
 
@@ -2973,7 +3034,8 @@
 
             
 
-            <td class="description last">optional, must be a string, delimited string or array.when undefined, blank, or empty, the root node's path will be utilized.</td>
+            <td class="description last">optional, must be a string, delimited string or array.
+when undefined, blank, or empty, the root node's path will be utilized.</td>
         </tr>
 
     
@@ -2996,7 +3058,8 @@
 
             
 
-            <td class="description last">optional, defaults to false the entry entry for the path itself will be included</td>
+            <td class="description last">optional, defaults to false
+ the entry entry for the path itself will be included</td>
         </tr>
 
     
@@ -3019,7 +3082,8 @@
 
             
 
-            <td class="description last">optional, defaults to falsedefines how the output array is returned</td>
+            <td class="description last">optional, defaults to false
+defines how the output array is returned</td>
         </tr>
 
     
@@ -3042,7 +3106,8 @@
 
             
 
-            <td class="description last">optional, defaults to the maximum depth of the treean integer representing the maximum depth of elements qualifying for return</td>
+            <td class="description last">optional, defaults to the maximum depth of the tree
+an integer representing the maximum depth of elements qualifying for return</td>
         </tr>
 
     
@@ -3144,7 +3209,10 @@
 
         
 <div class="param-desc">
-    when nested is false returns an array of [key] entrieswhen nested is true returns a nested array of [key, descendents] entrieskeys will be returned as node ids when the distinct property of the tree is trueNOTE: insertion order is NOT guaranteed
+    when nested is false returns an array of [key] entries
+when nested is true returns a nested array of [key, descendents] entries
+keys will be returned as node ids when the distinct property of the tree is true
+NOTE: insertion order is NOT guaranteed
 </div>
 
 
@@ -3330,7 +3398,9 @@
 
 
 <div class="description">
-    append or update a datum at the path providedwhen the path argument is a node id path array, intermediate nodes which do not exist will be provided a datum of undefinedtrees whose distinct property is false cannot use the ancestor argument
+    append or update a datum at the path provided
+when the path argument is a node id path array, intermediate nodes which do not exist will be provided a datum of undefined
+trees whose distinct property is false cannot use the ancestor argument
 </div>
 
 
@@ -3659,7 +3729,9 @@
 
             
 
-            <td class="description last">optional, defaults to _.identityfunction to apply to each nodeshould return truthy or falsey</td>
+            <td class="description last">optional, defaults to _.identity
+function to apply to each node
+should return truthy or falsey</td>
         </tr>
 
     
@@ -3682,7 +3754,9 @@
 
             
 
-            <td class="description last">optionalmust be a string, delimited string or array.when undefined, blank, or empty, the root node's path will be utilized.</td>
+            <td class="description last">optional
+must be a string, delimited string or array.
+when undefined, blank, or empty, the root node's path will be utilized.</td>
         </tr>
 
     
@@ -3705,7 +3779,9 @@
 
             
 
-            <td class="description last">optionaldefaults to falsewhen true, the entry for the path itself will also be provided to the function</td>
+            <td class="description last">optional
+defaults to false
+when true, the entry for the path itself will also be provided to the function</td>
         </tr>
 
     
@@ -3728,7 +3804,8 @@
 
             
 
-            <td class="description last">optional, defaults to the maximum depth of the treean integer representing the maximum depth from the path</td>
+            <td class="description last">optional, defaults to the maximum depth of the tree
+an integer representing the maximum depth from the path</td>
         </tr>
 
     
@@ -3929,7 +4006,10 @@
 
             
 
-            <td class="description last">optional, defaults to _identityfunction to apply to each nodereceives an entry and tree as argumentsMUST return a [path, datum] entry or undefined</td>
+            <td class="description last">optional, defaults to _identity
+function to apply to each node
+receives an entry and tree as arguments
+MUST return a [path, datum] entry or undefined</td>
         </tr>
 
     
@@ -3952,7 +4032,9 @@
 
             
 
-            <td class="description last">optionalmust be a string, delimited string or array.when undefined, blank, or empty, the root node's path will be utilized.</td>
+            <td class="description last">optional
+must be a string, delimited string or array.
+when undefined, blank, or empty, the root node's path will be utilized.</td>
         </tr>
 
     
@@ -4140,7 +4222,8 @@
 
             
 
-            <td class="description last">optional, must be a string, delimited string or array.when undefined, blank, or empty, the root node's path will be utilized.</td>
+            <td class="description last">optional, must be a string, delimited string or array.
+when undefined, blank, or empty, the root node's path will be utilized.</td>
         </tr>
 
     
@@ -4163,7 +4246,8 @@
 
             
 
-            <td class="description last">optional, defaults to false the entry entry for the path itself will be included</td>
+            <td class="description last">optional, defaults to false
+ the entry entry for the path itself will be included</td>
         </tr>
 
     
@@ -4186,7 +4270,8 @@
 
             
 
-            <td class="description last">optional, defaults to falsedefines how the output array is returned</td>
+            <td class="description last">optional, defaults to false
+defines how the output array is returned</td>
         </tr>
 
     
@@ -4209,7 +4294,8 @@
 
             
 
-            <td class="description last">optional, defaults to the maximum depth of the treean integer representing the maximum depth from the path</td>
+            <td class="description last">optional, defaults to the maximum depth of the tree
+an integer representing the maximum depth from the path</td>
         </tr>
 
     
@@ -4321,7 +4407,9 @@
 
         
 <div class="param-desc">
-    when nested is false returns an array of [key, datum] entrieswhen nested is true returns a nested array of [key, datum, descendents] entriesNOTE: (insertion order is NOT guaranteed.
+    when nested is false returns an array of [key, datum] entries
+when nested is true returns a nested array of [key, datum, descendents] entries
+NOTE: (insertion order is NOT guaranteed.
 </div>
 
 
