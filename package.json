@@ -1,22 +1,27 @@
 {
-  "name": "elemenTree",
+  "name": "elementree",
   "description": "a simple tree object",
   "version": "0.2.0",
   "repository": "mrose/elemenTree/",
-  "keywords": ["tree"],
+  "keywords": [
+    "tree"
+  ],
   "main": "index.js",
-  "files": ["index.js"],
+  "files": [
+    "index.js"
+  ],
   "devDependencies": {
-    "@babel/core": "7.2.0",
-    "jsdoc": "~3.6.6",
-    "lodash": "4.17.15",
-    "nodemon": "1.18.4",
-    "parcel-bundler": "^1.6.1"
+    "@babel/core": "^7.2.0",
+    "@babel/preset-env": "^7.12.7",
+    "babel-jest": "^26.6.3",
+    "jest": "^26.6.3",
+    "jsdoc-to-markdown": "^6.0.1",
+    "lodash": "^4.17.15"
   },
   "scripts": {
     "dev": "parcel src/index.js",
-    "start": "nodemon src/index.js",
     "build": "parcel build index.js",
-    "doc:build": "jsdoc -c ./jsdoc.json"
+    "test": "jest --config jest.json",
+    "jsdoc2md": "jsdoc2md --files src/tree.js > doc/api.md"
   }
 }

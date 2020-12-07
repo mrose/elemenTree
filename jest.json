@@ -1,0 +1,9 @@
+{
+  "displayName": "elementree",
+  "rootDir": "./",
+  "testRegex": "test/.+\\.test\\.js",
+  "transform": {
+    "^.+\\.js?$": "babel-jest"
+  },
+  "verbose": true
+}

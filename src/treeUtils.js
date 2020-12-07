@@ -1,16 +1,16 @@
-import _concat from 'lodash-es/concat';
-import _find from 'lodash-es/find';
-import _forEach from 'lodash-es/forEach';
-import _isArray from 'lodash-es/isArray';
-import _isEmpty from 'lodash-es/isEmpty';
-import _isEqual from 'lodash-es/isEqual';
-import _isString from 'lodash-es/isString';
-import _head from 'lodash-es/head';
-import _last from 'lodash-es/last';
-import _join from 'lodash-es/join';
-import _split from 'lodash-es/split';
-import _tail from 'lodash-es/take';
-import _take from 'lodash-es/take';
+import _concat from "lodash/concat";
+import _find from "lodash/find";
+import _forEach from "lodash/forEach";
+import _isArray from "lodash/isArray";
+import _isEmpty from "lodash/isEmpty";
+import _isEqual from "lodash/isEqual";
+import _isString from "lodash/isString";
+import _head from "lodash/head";
+import _last from "lodash/last";
+import _join from "lodash/join";
+import _split from "lodash/split";
+import _tail from "lodash/take";
+import _take from "lodash/take";
 
 // TODO: flatten & meta tests
 
@@ -23,7 +23,7 @@ import _take from 'lodash-es/take';
  */
 export function coerce(tree, path = []) {
   if (!_isArray(path) && !_isString(path))
-    throw new Error('path must be an array or a string');
+    throw new Error("path must be an array or a string");
 
   // an empty string or array means the root node path
   if (!path.length) return tree.rootNodePath;
@@ -43,7 +43,7 @@ export function coerce(tree, path = []) {
   if (tree.distinct && path.length === 2) {
     const np = _find(
       [...tree.__dataMap.keys()],
-      (k) => _last(s2p(k)) === _last(path),
+      (k) => _last(s2p(k)) === _last(path)
     );
     if (np && !_isEmpty(np)) path = s2p(np);
   }
@@ -74,7 +74,7 @@ export function flatten(entries, acc = []) {
  */
 export function meta(path, tree) {
   if (!_isArray(path) || path.length === 0)
-    throw new Error('path must be an array or a string');
+    throw new Error("path must be an array or a string");
 
   const depth = _tail(path).length;
   const hasParent = depth > 0;
@@ -104,7 +104,7 @@ export function p2s(tree, path = []) {
 export function p2228t(tree, path = []) {
   // probably unnecessary guard
   if (!_isArray(path) && !_isString(path))
-    throw new Error('path must be an array or a string');
+    throw new Error("path must be an array or a string");
 
   const p = _isString(path) ? s2p(tree, path) : path;
 
@@ -116,7 +116,7 @@ export function p2228t(tree, path = []) {
  * @access private
  * @param {string} pathString (delimited)
  */
-export function s2p(tree, pathString = '') {
+export function s2p(tree, pathString = "") {
   return _split(pathString, tree.path_string_delimiter);
 }
 
@@ -129,7 +129,7 @@ export function s2p(tree, pathString = '') {
  * @throws path is not an array
  */
 export function setIntermediates(tree, path) {
-  if (!_isArray(path)) throw new Error('path must be an array');
+  if (!_isArray(path)) throw new Error("path must be an array");
   _forEach(path, (v, i) => {
     let k = p2s(_take(path, i + 1));
     if (!tree.__dataMap.has(k)) tree.__dataMap.set(k, undefined);
