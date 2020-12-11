@@ -1,4 +1,4 @@
-import { Tree } from "../src/tree";
+import { Tree } from "../tree";
 
 describe(`The traverse method`, () => {
   // fn, path, order

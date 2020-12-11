@@ -1,4 +1,4 @@
-import { Tree } from "../src/tree";
+import { Tree } from "../tree";
 
 describe(`The getAncestorOf method`, () => {
   test(`throws an error when path argument is not a string or array`, () => {

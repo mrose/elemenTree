@@ -1,4 +1,4 @@
-import { Tree } from "../src/tree";
+import { Tree } from "../tree";
 
 describe(`A tree's clear method`, () => {
   test(`removes all nodes`, () => {

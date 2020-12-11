@@ -1,4 +1,4 @@
-import { Tree } from "../src/tree";
+import { Tree } from "../tree";
 
 describe(`A tree's get method`, () => {
   test(`throws an error when path argument is not a string or array`, () => {

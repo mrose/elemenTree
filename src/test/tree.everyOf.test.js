@@ -1,4 +1,4 @@
-import { Tree } from "../src/tree";
+import { Tree } from "../tree";
 
 describe(`The everyOf method`, () => {
   // everyOf(fn, path, inclusive, depth,)

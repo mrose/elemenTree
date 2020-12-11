@@ -1,4 +1,4 @@
-import { Tree } from "../src/tree";
+import { Tree } from "../tree";
 
 describe(`A tree's firstDescendentsOf method`, () => {
   test(`returns a flat array of [key, datum] whose keys match a provided path limited by a depth of 1`, () => {

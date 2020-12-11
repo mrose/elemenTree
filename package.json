@@ -11,17 +11,17 @@
     "index.js"
   ],
   "devDependencies": {
-    "@babel/core": "^7.2.0",
-    "@babel/preset-env": "^7.12.7",
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.10",
     "babel-jest": "^26.6.3",
     "jest": "^26.6.3",
     "jsdoc-to-markdown": "^6.0.1",
-    "lodash": "^4.17.15"
+    "lodash": "^4.17.20"
   },
   "scripts": {
     "dev": "parcel src/index.js",
     "build": "parcel build index.js",
-    "test": "jest --config jest.json",
+    "test": "jest --config ./jest.json",
     "jsdoc2md": "jsdoc2md --files src/tree.js > doc/api.md"
   }
 }

@@ -1,4 +1,4 @@
-import { Tree } from "../src/tree";
+import { Tree } from "../tree";
 import {
   coerce,
   hasRootDatum,
@@ -6,7 +6,7 @@ import {
   p2228t,
   s2p,
   setIntermediates,
-} from "../src/treeUtils";
+} from "../treeUtils";
 
 describe(`tree utilities`, () => {
   test.skip(`coerce() coerces delimited strings, simple strings, and arrays to path arrays`, () => {

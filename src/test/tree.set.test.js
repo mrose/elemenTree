@@ -1,4 +1,4 @@
-import { Tree } from "../src/tree";
+import { Tree } from "../tree";
 
 describe(`The set method`, () => {
   describe(`for trees which have distinct node Ids (default)`, () => {

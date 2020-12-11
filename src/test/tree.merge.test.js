@@ -1,4 +1,4 @@
-import { Tree } from "../src/tree";
+import { Tree } from "../tree";
 
 describe(`The merge method`, () => {
   test(`throws an error when a non distinct (source) tree is merged with a distinct tree (target)`, () => {

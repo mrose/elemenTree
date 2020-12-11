@@ -1,4 +1,4 @@
-import { Tree } from "../src/tree";
+import { Tree } from "../tree";
 
 describe(`A tree's static factory method`, () => {
   test(`should be used to create a new tree`, () => {

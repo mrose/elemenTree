@@ -1,4 +1,4 @@
-import { Tree } from "../src/tree";
+import { Tree } from "../tree";
 
 describe(`A tree's has method`, () => {
   test(`tests whether a node exists`, () => {

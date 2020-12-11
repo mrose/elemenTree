@@ -1,4 +1,4 @@
-import { Tree } from "../src/tree";
+import { Tree } from "../tree";
 
 describe(`The delete method`, () => {
   describe(`for trees which have non-distinct node Ids`, () => {
