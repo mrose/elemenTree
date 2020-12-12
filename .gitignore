@@ -1,6 +1,6 @@
 .DS_Store
 .vscode
 node_modules
-/yarn.lock
-/dist
-/index.js
+yarn.lock
+dist
+index.js
