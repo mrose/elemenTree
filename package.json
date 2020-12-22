@@ -1,18 +1,18 @@
 {
-  "name": "elementree",
+  "name": "simplicitree",
   "version": "0.7.1",
   "description": "a simple tree object",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrose/elementree.git"
+    "url": "https://github.com/mrose/simplicitree.git"
   },
   "keywords": [
     "tree"
   ],
   "license": "MIT",
-  "main": "dist/elementree.cjs.js",
-  "module": "dist/elementree.esm.js",
-  "browser": "dist/elementree.umd.js",
+  "main": "dist/simplicitree.cjs.js",
+  "module": "dist/simplicitree.esm.js",
+  "browser": "dist/simplicitree.umd.js",
   "files": [
     "dist"
   ],

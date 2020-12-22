@@ -1,5 +1,5 @@
 {
-  "displayName": "elementree",
+  "displayName": "simplicitree",
   "rootDir": "./",
   "testRegex": "test/.+\\.test\\.js",
   "transform": {
