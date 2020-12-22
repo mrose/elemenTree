@@ -1,11 +1,12 @@
 {
   "name": "elementree",
   "description": "a simple tree object",
-  "version": "0.7.0",
   "repository": "mrose/elemenTree/",
   "keywords": [
     "tree"
   ],
+  "license": "MIT",
+  "version": "0.7.0",
   "main": "dist/elementree.cjs.js",
   "module": "dist/elementree.esm.js",
   "browser": "dist/elementree.umd.js",
