@@ -12,12 +12,13 @@ and primitive values) may be used as a value.
 $ npm install elementree
 ```
 
-## Import
+## Import or Require
 
 ```bash
 import { Tree } from "elementree";
 
-const myTree = Tree.factory(); // using the factory method means no positional params though none are required
+// use the factory method: no positional parameters (none are required)
+const myTree = Tree.factory();
 ```
 
 ## Api & Docs
