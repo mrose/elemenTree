@@ -19,8 +19,8 @@ const yrnow = new Date(new Date().getTime()).getFullYear();
 
 const banner = `/**
 * @license
-*	elementree
-*	https://github.com/mrose/elementree
+*	simplicitree
+*	https://github.com/mrose/simplicitree
 *	© ${yrnow} Mitchell Rose
 * version ${pkg.version}
 * commit ${ch}
@@ -48,7 +48,7 @@ export default [
     output: {
       file: pkg.browser,
       format: "umd",
-      name: "elementree",
+      name: "simplicitree",
       banner,
     },
     plugins: [
