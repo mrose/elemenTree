@@ -1,4 +1,12 @@
 import _ from "lodash";
+import filter from "lodash/fp/filter";
+import flow from "lodash/fp/flow";
+import forEach from "lodash/fp/forEach";
+import map from "lodash/fp/map";
+import max from "lodash/fp/max";
+import min from "lodash/fp/min";
+import reverse from "lodash/fp/reverse";
+import take from "lodash/fp/take";
 
 /**
  * A Tree object
@@ -176,9 +184,10 @@ class Tree {
    * @returns {Number} The count of nodes in the longest path, including the root.
    */
   get depth() {
-    return _([...this.__dataMap.keys()])
-      .map((key) => this.__s2p(key).length)
-      .max();
+    return flow(
+      map((key) => this.__s2p(key).length),
+      max
+    )([...this.__dataMap.keys()]);
   }
 
   /**
@@ -234,11 +243,13 @@ class Tree {
     path = this.__derive(path);
 
     const target = this.__p2s(path);
-    let fe = _.filter([...this.__dataMap.entries()], ([sk, d]) => {
-      if (!inclusive && sk === target) return false;
-      return _.startsWith(sk, target);
-    });
-    fe = _.map(fe, ([k, v]) => [this.__p2228t(k), v]);
+    let fe = flow(
+      filter(([sk, d]) => {
+        if (!inclusive && sk === target) return false;
+        return _.startsWith(sk, target);
+      }),
+      map(([k, v]) => [this.__p2228t(k), v])
+    )([...this.__dataMap.entries()]);
 
     _.forEach(fe, (entry) => {
       const [ek, ev] = entry;
@@ -341,37 +352,36 @@ class Tree {
 
     const maxDepth = depth ? p.length + depth : this.depth;
     const target = this.__p2s(p);
-    let fe = _.filter([...this.__dataMap.entries()], ([sk, d]) => {
+    let fe = filter(([sk, d]) => {
       const ak = this.__s2p(sk);
       if (!inclusive && sk === target) return false;
       return _.startsWith(sk, target) && ak.length <= maxDepth;
-    });
+    })([...this.__dataMap.entries()]);
 
-    if (!nested) return _.map(fe, ([k, v]) => [this.__p2228t(k), v]);
+    if (!nested) return map(([k, v]) => [this.__p2228t(k), v])(fe);
 
-    const nest = (entries) => {
-      return _.map(entries, ([tk, v]) => {
+    const nest = (entries) =>
+      map(([tk, v]) => {
         const ak = this.__s2p(tk);
-        const descendents = _.filter(
-          fe,
+        const descendents = filter(
           ([k, v]) =>
             _.startsWith(k, tk) && this.__s2p(k).length === ak.length + 1
-        );
+        )(fe);
         return [
           this.__p2228t(tk),
           v,
           descendents.length ? nest(descendents) : [],
         ];
-      });
-    };
+      })(entries);
 
     // minimum depth
-    const mnd = _(fe)
-      .map((key) => this.__s2p(key).length)
-      .min();
+    const mnd = flow(
+      map((key) => this.__s2p(key).length),
+      min
+    )(fe);
 
     // base nodes. we won't sort so maybe the top nodes will remain in insertion order
-    const bn = _.filter(fe, ([k, v]) => this.__s2p(k).length === mnd);
+    const bn = filter(([k, v]) => this.__s2p(k).length === mnd)(fe);
     return nest(bn);
   }
 
@@ -418,13 +428,14 @@ class Tree {
     const maxDepth = depth ? p.length + depth : this.depth;
 
     const target = this.__p2s(p);
-    let fe = _.filter([...this.__dataMap.entries()], ([sk, d]) => {
-      const ak = this.__s2p(sk);
-      if (!inclusive && sk === target) return false;
-      return _.startsWith(sk, target) && ak.length <= maxDepth;
-    });
-    fe = _.map(fe, ([k, v]) => [this.__p2228t(k), v]);
-
+    let fe = flow(
+      filter(([sk, d]) => {
+        const ak = this.__s2p(sk);
+        if (!inclusive && sk === target) return false;
+        return _.startsWith(sk, target) && ak.length <= maxDepth;
+      }),
+      map(([k, v]) => [this.__p2228t(k), v])
+    )([...this.__dataMap.entries()]);
     return _.every(fe, fn);
   }
 
@@ -453,10 +464,10 @@ class Tree {
       return _.startsWith(sk, this.__p2s(p));
     };
 
-    return _([...this.__dataMap.entries()])
-      .filter(fdo)
-      .map(([sk, v]) => [this.__p2228t(sk), v])
-      .value();
+    return flow(
+      filter(fdo),
+      map(([sk, v]) => [this.__p2228t(sk), v])
+    )([...this.__dataMap.entries()]);
   }
 
   /**
@@ -567,32 +578,32 @@ class Tree {
     const maxDepth = depth ? p.length + depth : this.depth;
     const target = this.__p2s(p);
 
-    let fe = _.filter([...this.__dataMap.keys()], (k) => {
+    let fe = filter((k) => {
       const ak = this.__s2p(k);
       if (!inclusive && k === target) return false;
       return _.startsWith(k, target) && ak.length <= maxDepth;
-    });
+    })([...this.__dataMap.keys()]);
 
-    if (!nested) return _.map(fe, (k) => this.__p2228t(k));
+    if (!nested) return map((k) => this.__p2228t(k))(fe);
 
-    const nest = (keys) => {
-      return _.map(keys, (tk) => {
+    const nest = (keys) =>
+      map((tk) => {
         const ak = this.__s2p(tk);
         const descendents = _.filter(
           fe,
           (k) => _.startsWith(k, tk) && this.__s2p(k).length === ak.length + 1
         );
         return [this.__p2228t(tk), descendents.length ? nest(descendents) : []];
-      });
-    };
+      })(keys);
 
     // minimum depth
-    const mnd = _(fe)
-      .map((key) => this.__s2p(key).length)
-      .min();
+    const mnd = flow(
+      map((key) => this.__s2p(key).length),
+      min
+    )(fe);
 
     // base nodes. we won't sort so at least the top nodes will remain in insertion order
-    const bn = _.filter(fe, (k) => this.__s2p(k).length === mnd);
+    const bn = filter((k) => this.__s2p(k).length === mnd)(fe);
     return nest(bn);
   }
 
@@ -605,11 +616,10 @@ class Tree {
     if (this.disinct && !source.disinct) this.__excp(9);
 
     const ies = source.__dataMap.entries();
-    const entries = _.map([...ies], ([k, v]) => [
-      _.split(k, source.path_string_delimiter),
-      v,
-    ]);
-    _.forEach(entries, ([k, v]) => this.set(k, v));
+    flow(
+      map(([k, v]) => [_.split(k, source.path_string_delimiter), v]),
+      forEach(([k, v]) => this.set(k, v))
+    )([...ies]);
   }
 
   /**
@@ -759,12 +769,14 @@ class Tree {
     const maxDepth = depth ? p.length + depth : this.depth;
 
     const target = this.__p2s(p);
-    let fe = _.filter([...this.__dataMap.entries()], ([sk, d]) => {
-      const ak = this.__s2p(sk);
-      if (!inclusive && sk === target) return false;
-      return _.startsWith(sk, target) && ak.length <= maxDepth;
-    });
-    fe = _.map(fe, ([k, v]) => [this.__p2228t(k), v]);
+    let fe = flow(
+      filter(([sk, d]) => {
+        const ak = this.__s2p(sk);
+        if (!inclusive && sk === target) return false;
+        return _.startsWith(sk, target) && ak.length <= maxDepth;
+      }),
+      map(([k, v]) => [this.__p2228t(k), v])
+    )([...this.__dataMap.entries()]);
 
     return _.some(fe, fn);
   }
@@ -870,34 +882,32 @@ class Tree {
 
     const maxDepth = depth ? p.length + depth : this.depth;
     const target = this.__p2s(p);
-
-    let fe = _.filter([...this.__dataMap.entries()], ([sk, d]) => {
+    let fe = filter(([sk, d]) => {
       const ak = this.__s2p(sk);
       if (!inclusive && sk === target) return false;
       return _.startsWith(sk, target) && ak.length <= maxDepth;
-    });
+    })([...this.__dataMap.entries()]);
 
-    if (!nested) return _.map(fe, ([k, v]) => v);
+    if (!nested) return map(([k, v]) => v)(fe);
 
-    const nest = (values) => {
-      return _.map(values, ([tk, v]) => {
+    const nest = (entries) =>
+      map(([tk, v]) => {
         const ak = this.__s2p(tk);
-        const descendents = _.filter(
-          fe,
+        const descendents = filter(
           ([k, v]) =>
             _.startsWith(k, tk) && this.__s2p(k).length === ak.length + 1
-        );
+        )(fe);
         return [v, descendents.length ? nest(descendents) : []];
-      });
-    };
+      })(entries);
 
     // minimum depth
-    const mnd = _(fe)
-      .map((key) => this.__s2p(key).length)
-      .min();
+    const mnd = flow(
+      map((key) => this.__s2p(key).length),
+      min
+    )(fe);
 
     // base nodes. we won't sort so at least the top nodes will remain in insertion order
-    const bn = _.filter(fe, ([k, v]) => this.__s2p(k).length === mnd);
+    const bn = filter(([k, v]) => this.__s2p(k).length === mnd)(fe);
     return nest(bn);
   }
 

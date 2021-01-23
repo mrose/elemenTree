@@ -1,7 +1,9 @@
 .commithash
 .DS_Store
+.prettierrc
 .vscode
-node_modules
-yarn.lock
 dist
 index.js
+jsconfig.json
+node_modules
+yarn.lock
