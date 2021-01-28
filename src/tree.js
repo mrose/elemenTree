@@ -1,12 +1,30 @@
 import _ from "lodash";
+import castArray from "lodash/fp/castArray";
+import concat from "lodash/fp/concat";
 import filter from "lodash/fp/filter";
+import find from "lodash/fp/find";
 import flow from "lodash/fp/flow";
 import forEach from "lodash/fp/forEach";
+import head from "lodash/fp/head";
+import includes from "lodash/fp/includes";
+import isArray from "lodash/fp/isArray";
+import isEmpty from "lodash/fp/isEmpty";
+import isEqual from "lodash/fp/isEqual";
+import isInteger from "lodash/fp/isInteger";
+import isNil from "lodash/fp/isNil";
+import isString from "lodash/fp/isString";
+import last from "lodash/fp/last";
 import map from "lodash/fp/map";
 import max from "lodash/fp/max";
 import min from "lodash/fp/min";
+import noop from "lodash/fp/noop";
 import reverse from "lodash/fp/reverse";
+import split from "lodash/fp/split";
+import stubTrue from "lodash/fp/stubTrue";
 import take from "lodash/fp/take";
+import takeRight from "lodash/fp/takeRight";
+
+import { p2s, s2p, treeException } from "./treeUtils";
 
 /**
  * A Tree object
@@ -94,10 +112,7 @@ class Tree {
 
     this.__dataMap = dataMap || new Map(); //key = path[], value = {data} thar be data
     this.__dataMap.set(root_node_id, datum);
-    if (show_root) {
-      if (!_.includes(["yes", "no", "auto"], show_root)) this.__excp(3);
-    }
-    this.show_root = show_root;
+    if (show_root) this.show_root = validate(3, { show_root });
   }
 
   /**
@@ -184,10 +199,11 @@ class Tree {
    * @returns {Number} The count of nodes in the longest path, including the root.
    */
   get depth() {
+    const { __dataMap, path_string_delimiter } = this;
     return flow(
-      map((key) => this.__s2p(key).length),
+      map((key) => s2p(path_string_delimiter, key).length),
       max
-    )([...this.__dataMap.keys()]);
+    )([...__dataMap.keys()]);
   }
 
   /**
@@ -239,31 +255,28 @@ class Tree {
    * @throws function provided must return undefined or an [path, datum] entry
    */
   cascade(fn = _.identity, path, inclusive = false) {
-    if (!this.has(path)) this.__excp(4, { path });
-    path = this.__derive(path);
+    path = validate(4, { path, tree: this });
 
-    const target = this.__p2s(path);
+    const { __dataMap, path_string_delimiter } = this;
+    const target = p2s(path_string_delimiter, path);
     let fe = flow(
       filter(([sk, d]) => {
         if (!inclusive && sk === target) return false;
         return _.startsWith(sk, target);
       }),
       map(([k, v]) => [this.__p2228t(k), v])
-    )([...this.__dataMap.entries()]);
+    )([...__dataMap.entries()]);
 
     _.forEach(fe, (entry) => {
       const [ek, ev] = entry;
       const ret = fn([ek, ev], this);
       if (_.isUndefined(ret)) return;
       // entry must be an entry (array with path & datum elements) or undefined
-      if (!_.isArray(ret) || ret.length <= 1) this.__excp(5);
-
+      let [p, v] = validate(5, { ret });
       // we don't know what key we're getting back but we better have it
-      let [p, v] = ret;
-      if (!this.has(p)) this.__excp(4, { path: p });
+      p = validate(4, { path: p, tree: this });
 
-      p = this.__derive(p);
-      this.__dataMap.set(this.__p2s(p), v);
+      this.__dataMap.set(p2s(path_string_delimiter, p), v);
     });
   }
 
@@ -292,7 +305,8 @@ class Tree {
    */
   delete(path, inclusive = true) {
     const p = this.__derive(path);
-    const target = this.__p2s(p);
+    const { path_string_delimiter } = this;
+    const target = p2s(path_string_delimiter, p);
 
     let keys = _.filter([...this.__dataMap.keys()], (k) => {
       if (!inclusive && k === target) return false;
@@ -344,28 +358,28 @@ class Tree {
    */
 
   entriesOf(path, inclusive = false, nested = false, depth) {
-    const p = this.__derive(path);
+    const p = this.__derive(path); // do not use validate here
+    validate(6, { depth });
+    validate(7, { depth, inclusive });
 
-    if (depth && !_.isInteger(depth)) this.__excp(6);
-
-    if (depth === 0 && !inclusive) this.__excp(7);
-
-    const maxDepth = depth ? p.length + depth : this.depth;
-    const target = this.__p2s(p);
+    const { __dataMap, depth: treeDepth, path_string_delimiter } = this;
+    const maxDepth = depth ? p.length + depth : treeDepth;
+    const target = p2s(path_string_delimiter, p);
     let fe = filter(([sk, d]) => {
-      const ak = this.__s2p(sk);
+      const ak = s2p(path_string_delimiter, sk);
       if (!inclusive && sk === target) return false;
       return _.startsWith(sk, target) && ak.length <= maxDepth;
-    })([...this.__dataMap.entries()]);
+    })([...__dataMap.entries()]);
 
     if (!nested) return map(([k, v]) => [this.__p2228t(k), v])(fe);
 
     const nest = (entries) =>
       map(([tk, v]) => {
-        const ak = this.__s2p(tk);
+        const ak = s2p(this.path_string_delimiter, tk);
         const descendents = filter(
           ([k, v]) =>
-            _.startsWith(k, tk) && this.__s2p(k).length === ak.length + 1
+            _.startsWith(k, tk) &&
+            s2p(this.path_string_delimiter, k).length === ak.length + 1
         )(fe);
         return [
           this.__p2228t(tk),
@@ -376,12 +390,14 @@ class Tree {
 
     // minimum depth
     const mnd = flow(
-      map((key) => this.__s2p(key).length),
+      map((key) => s2p(this.path_string_delimiter, key).length),
       min
     )(fe);
 
     // base nodes. we won't sort so maybe the top nodes will remain in insertion order
-    const bn = filter(([k, v]) => this.__s2p(k).length === mnd)(fe);
+    const bn = filter(
+      ([k, v]) => s2p(this.path_string_delimiter, k).length === mnd
+    )(fe);
     return nest(bn);
   }
 
@@ -418,24 +434,22 @@ class Tree {
    * @throws depth cannot be zero when inclusive is false
    */
   everyOf(fn = _.identity, path, inclusive = false, depth) {
-    if (!this.has(path)) this.__excp(4, { path });
-    const p = this.__derive(path);
+    const p = validate(4, { path, tree: this });
+    validate(6, { depth });
+    validate(7, { depth, inclusive });
 
-    if (depth && !_.isInteger(depth)) this.__excp(6);
+    const { __dataMap, depth: treeDepth, path_string_delimiter } = this;
+    const maxDepth = depth ? p.length + depth : treeDepth;
 
-    if (depth === 0 && !inclusive) this.__excp(7);
-
-    const maxDepth = depth ? p.length + depth : this.depth;
-
-    const target = this.__p2s(p);
+    const target = p2s(path_string_delimiter, p);
     let fe = flow(
       filter(([sk, d]) => {
-        const ak = this.__s2p(sk);
+        const ak = s2p(path_string_delimiter, sk);
         if (!inclusive && sk === target) return false;
         return _.startsWith(sk, target) && ak.length <= maxDepth;
       }),
       map(([k, v]) => [this.__p2228t(k), v])
-    )([...this.__dataMap.entries()]);
+    )([...__dataMap.entries()]);
     return _.every(fe, fn);
   }
 
@@ -458,16 +472,16 @@ class Tree {
    */
   firstDescendentsOf(path) {
     const p = this.__derive(path);
-
+    const { __dataMap, path_string_delimiter } = this;
     const fdo = ([sk, v]) => {
-      if (this.__s2p(sk).length !== p.length + 1) return false;
-      return _.startsWith(sk, this.__p2s(p));
+      if (s2p(path_string_delimiter, sk).length !== p.length + 1) return false;
+      return _.startsWith(sk, p2s(path_string_delimiter, p));
     };
 
     return flow(
       filter(fdo),
       map(([sk, v]) => [this.__p2228t(sk), v])
-    )([...this.__dataMap.entries()]);
+    )([...__dataMap.entries()]);
   }
 
   /**
@@ -488,9 +502,9 @@ class Tree {
    * @throws node does not exist, use has()?
    */
   get(path) {
-    if (!this.has(path)) this.__excp(4, { path });
-    const p = this.__derive(path);
-    return this.__dataMap.get(this.__p2s(p));
+    const p = validate(4, { path, tree: this });
+    const { __dataMap, path_string_delimiter } = this;
+    return __dataMap.get(p2s(path_string_delimiter, p));
   }
 
   /**
@@ -508,9 +522,9 @@ class Tree {
    * @throws no ancestor exists for root node
    */
   getAncestorOf(path) {
-    if (!this.has(path)) this.__excp(4, { path });
-    const { parentPath } = this.__meta(this.__derive(path));
-    if (_.isEmpty(parentPath)) this.__excp(8, { path: this.root_node_id });
+    path = validate(4, { path, tree: this });
+    const { parentPath } = this.__meta(path);
+    validate(8, { path: this.root_node_id, parentPath });
     return this.get(parentPath);
   }
 
@@ -528,7 +542,8 @@ class Tree {
    */
   has(path) {
     const p = this.__derive(path);
-    return this.__dataMap.has(this.__p2s(p));
+    const { path_string_delimiter } = this;
+    return this.__dataMap.has(p2s(path_string_delimiter, p));
   }
 
   /**
@@ -569,41 +584,42 @@ class Tree {
    * @throws depth cannot be zero when inclusive is false
    */
   keysOf(path, inclusive = false, nested = false, depth) {
-    const p = this.__derive(path);
+    const p = this.__derive(path); // do not use validate here
+    validate(6, { depth });
+    validate(7, { depth, inclusive });
 
-    if (depth && !_.isInteger(depth)) this.__excp(6);
-
-    if (depth === 0 && !inclusive) this.__excp(7);
-
-    const maxDepth = depth ? p.length + depth : this.depth;
-    const target = this.__p2s(p);
+    const { __dataMap, depth: treeDepth, path_string_delimiter } = this;
+    const maxDepth = depth ? p.length + depth : treeDepth;
+    const target = p2s(path_string_delimiter, p);
 
     let fe = filter((k) => {
-      const ak = this.__s2p(k);
+      const ak = s2p(path_string_delimiter, k);
       if (!inclusive && k === target) return false;
       return _.startsWith(k, target) && ak.length <= maxDepth;
-    })([...this.__dataMap.keys()]);
+    })([...__dataMap.keys()]);
 
     if (!nested) return map((k) => this.__p2228t(k))(fe);
 
     const nest = (keys) =>
       map((tk) => {
-        const ak = this.__s2p(tk);
+        const ak = s2p(path_string_delimiter, tk);
         const descendents = _.filter(
           fe,
-          (k) => _.startsWith(k, tk) && this.__s2p(k).length === ak.length + 1
+          (k) =>
+            _.startsWith(k, tk) &&
+            s2p(path_string_delimiter, k).length === ak.length + 1
         );
         return [this.__p2228t(tk), descendents.length ? nest(descendents) : []];
       })(keys);
 
     // minimum depth
     const mnd = flow(
-      map((key) => this.__s2p(key).length),
+      map((key) => s2p(path_string_delimiter, key).length),
       min
     )(fe);
 
     // base nodes. we won't sort so at least the top nodes will remain in insertion order
-    const bn = filter((k) => this.__s2p(k).length === mnd)(fe);
+    const bn = filter((k) => s2p(path_string_delimiter, k).length === mnd)(fe);
     return nest(bn);
   }
 
@@ -613,7 +629,10 @@ class Tree {
    * @throws non distinct trees cannot be merged into distinct trees
    */
   merge(source) {
-    if (this.disinct && !source.disinct) this.__excp(9);
+    validate(9, {
+      sourceDistinct: source.distinct,
+      targetDistinct: this.distinct,
+    });
 
     const ies = source.__dataMap.entries();
     flow(
@@ -649,8 +668,8 @@ class Tree {
    *
    * @throws path must be a simple string (when the ancestor provided is not a simple string)
    * @throws elements in a path cannot be empty strings
-   * @throws ancestor does not exist (when the ancestor is provided is not in the tree)
-   * @throws ancestor cannot be used on distinct trees, full node id paths are required
+   * @throws ancestor does not exist (when the ancestor provided is not in the tree)
+   * @throws ancestor argument cannot be used to set nodes on distinct trees, full node id paths are required
    * @throws ancestor must be a simple string or single element array
    * @throws path already exists in this distinct tree
    * @throws elements in a path cannot be duplicated with distinct trees
@@ -659,39 +678,41 @@ class Tree {
     let d,
       p = path;
     p = this.__derive(p);
-    let exists = this.__dataMap.has(this.__p2s(p));
+    const { __dataMap, distinct, path_string_delimiter } = this;
+    let exists = __dataMap.has(p2s(path_string_delimiter, p));
     let meta = this.__meta(p);
 
-    if (!_.isNil(ancestor)) {
-      if (!this.distinct) this.__excp(11, { ancestor, path });
-
-      if (!_.isString(ancestor) && !_.isArray(ancestor)) this.__excp(10);
-
-      d = _.isString(ancestor) ? _.castArray(ancestor) : ancestor;
-      if (d.length > 1) this.__excp(10);
+    if (!isNil(ancestor)) {
+      validate(11, { distinct, path });
+      validate(10, { ancestor });
     }
 
-    if (this.distinct) {
-      if (!_.isNil(ancestor)) {
+    if (distinct) {
+      if (!isNil(ancestor)) {
         if (exists) {
           // no duplicate node id!
-          d = _.isString(ancestor) ? _.castArray(ancestor) : ancestor;
-          const ta = this.__p2s(d);
-
-          if (ta !== meta.distinctAncestor)
-            this.__excp(12, { path, ancestor: ta });
+          validate(121, { ancestor, path, path_string_delimiter, tree: this });
 
           // is it update
-          this.__dataMap.set(this.__p2s(p), datum);
+          __dataMap.set(p2s(path_string_delimiter, p), datum);
           return this.__p2228t(p);
         }
 
         // i.e. root + something
-        if (p.length > 2) this.__excp(14, { path, datum, ancestor });
+        validate(14, { ancestor, datum, path, tree: this });
 
-        // do ancestry now
+        // ancestor should exist
+        /*
+        validate(15, {
+          ancestor,
+          __dataMap,
+          path_string_delimiter,
+          tree: this,
+        });
+        */
         d = this.__derive(ancestor);
-        if (!this.__dataMap.has(this.__p2s(d))) this.__excp(15, { ancestor });
+        if (!__dataMap.has(p2s(path_string_delimiter, d)))
+          treeException(15, { ancestor });
 
         p = _.concat(d, _.tail(p));
       }
@@ -699,31 +720,37 @@ class Tree {
       // distinctness checks
       _.forEach(p, (tip, i) => {
         const nidx = i + 1;
-        let k = this.__p2s(_.take(p, nidx));
+        let k = p2s(path_string_delimiter, _.take(p, nidx));
+        //      validate(122,{ k, path_string_delimiter, tip, tree });
         let np = this.__derive(tip);
-        let ta = this.__p2s(np);
-        exists = this.__dataMap.has(ta);
+        let ta = p2s(path_string_delimiter, np);
+        exists = __dataMap.has(ta);
+
         if (exists & (k !== ta)) {
           meta = this.__meta(np);
-          this.__excp(12, { path: tip, ancestor: meta.distinctAncestor });
+          treeException(12, {
+            path: tip,
+            ancestor: meta.distinctAncestor,
+          });
         }
-        if (_.includes(_.takeRight(p, p.length - nidx), tip))
-          this.__excp(16, { path: p });
+
+        const idx = p.length - nidx;
+        validate(16, { idx, path: p, tip });
       });
     } // end of distincty town
 
     if (p.length === 1) {
-      this.__dataMap.set(this.root_node_id, datum);
+      __dataMap.set(this.root_node_id, datum);
       return _.castArray(this.root_node_id);
     }
 
     // set intermediate nodes
     _.forEach(p, (v, i) => {
-      let k = this.__p2s(_.take(p, i + 1));
-      if (!this.__dataMap.has(k)) this.__dataMap.set(k, undefined);
+      let k = p2s(path_string_delimiter, _.take(p, i + 1));
+      if (!__dataMap.has(k)) __dataMap.set(k, undefined);
     });
 
-    this.__dataMap.set(this.__p2s(p), datum);
+    __dataMap.set(p2s(path_string_delimiter, p), datum);
     // might we end up setting an insertion order number/index/graph coords?
     return this.__p2228t(p);
   }
@@ -759,24 +786,22 @@ class Tree {
    * @throws depth cannot be zero when inclusive is false
    */
   someOf(fn = _.identity, path, inclusive = false, depth) {
-    if (!this.has(path)) this.__excp(4, { path });
-    const p = this.__derive(path);
+    const p = validate(4, { path, tree: this });
+    validate(6, { depth });
+    validate(7, { depth, inclusive });
 
-    if (depth && !_.isInteger(depth)) this.__excp(6);
+    const { __dataMap, depth: treeDepth, path_string_delimiter } = this;
+    const maxDepth = depth ? p.length + depth : treeDepth;
 
-    if (depth === 0 && !inclusive) this.__excp(7);
-
-    const maxDepth = depth ? p.length + depth : this.depth;
-
-    const target = this.__p2s(p);
+    const target = p2s(path_string_delimiter, p);
     let fe = flow(
       filter(([sk, d]) => {
-        const ak = this.__s2p(sk);
+        const ak = s2p(path_string_delimiter, sk);
         if (!inclusive && sk === target) return false;
         return _.startsWith(sk, target) && ak.length <= maxDepth;
       }),
       map(([k, v]) => [this.__p2228t(k), v])
-    )([...this.__dataMap.entries()]);
+    )([...__dataMap.entries()]);
 
     return _.some(fe, fn);
   }
@@ -808,32 +833,27 @@ class Tree {
    * @throws function provided must return undefined or an [path, datum] entry
    */
   traverse(fn = _.identity, path, order = "desc") {
-    if (!this.has(path)) this.__excp(4, { path });
+    path = validate(4, { path, tree: this });
 
-    if (!_.includes(["asc", "desc"], order)) this.__excp(17, { order });
+    validate(17, { order });
 
-    path = this.__derive(path);
-
+    const { __dataMap, path_string_delimiter } = this;
     // get keys for each node
     let keys = _.map(path, (v, idx) => _.take(path, idx + 1));
     if (order === "asc") keys = _.reverse(keys);
 
     _.forEach(keys, (k) => {
-      const sk = this.__p2s(k);
-      const d = this.__dataMap.get(sk);
+      const sk = p2s(path_string_delimiter, k);
+      const d = __dataMap.get(sk);
       let entry = [this.__p2228t(k), d];
 
       const ret = fn(entry, this);
       if (_.isUndefined(ret)) return;
       // entry must be an entry (array with path & datum elements) or undefined
-      if (!_.isArray(ret) || ret.length <= 1) this.__excp(5);
-
+      let [p, v] = validate(5, { ret });
       // we don't know what key we're getting back but we better have it
-      let [p, v] = ret;
-      if (!this.has(p)) this.__excp(4, { path: p });
-
-      p = this.__derive(p);
-      this.__dataMap.set(this.__p2s(p), v);
+      p = validate(4, { path: p, tree: this });
+      this.__dataMap.set(p2s(path_string_delimiter, p), v);
     });
   }
 
@@ -874,40 +894,42 @@ class Tree {
    * @throws depth cannot be zero when inclusive is false
    */
   valuesOf(path, inclusive = false, nested = false, depth) {
-    const p = this.__derive(path);
+    const p = this.__derive(path); // do not use validate here
+    validate(6, { depth });
+    validate(7, { depth, inclusive });
 
-    if (depth && !_.isInteger(depth)) this.__excp(6);
-
-    if (depth === 0 && !inclusive) this.__excp(7);
-
-    const maxDepth = depth ? p.length + depth : this.depth;
-    const target = this.__p2s(p);
+    const { __dataMap, depth: treeDepth, path_string_delimiter } = this;
+    const maxDepth = depth ? p.length + depth : treeDepth;
+    const target = p2s(path_string_delimiter, p);
     let fe = filter(([sk, d]) => {
-      const ak = this.__s2p(sk);
+      const ak = s2p(path_string_delimiter, sk);
       if (!inclusive && sk === target) return false;
       return _.startsWith(sk, target) && ak.length <= maxDepth;
-    })([...this.__dataMap.entries()]);
+    })([...__dataMap.entries()]);
 
     if (!nested) return map(([k, v]) => v)(fe);
 
     const nest = (entries) =>
       map(([tk, v]) => {
-        const ak = this.__s2p(tk);
+        const ak = s2p(path_string_delimiter, tk);
         const descendents = filter(
           ([k, v]) =>
-            _.startsWith(k, tk) && this.__s2p(k).length === ak.length + 1
+            _.startsWith(k, tk) &&
+            s2p(path_string_delimiter, k).length === ak.length + 1
         )(fe);
         return [v, descendents.length ? nest(descendents) : []];
       })(entries);
 
     // minimum depth
     const mnd = flow(
-      map((key) => this.__s2p(key).length),
+      map((key) => s2p(path_string_delimiter, key).length),
       min
     )(fe);
 
     // base nodes. we won't sort so at least the top nodes will remain in insertion order
-    const bn = filter(([k, v]) => this.__s2p(k).length === mnd)(fe);
+    const bn = filter(([k, v]) => s2p(path_string_delimiter, k).length === mnd)(
+      fe
+    );
     return nest(bn);
   }
 
@@ -926,69 +948,38 @@ class Tree {
    * @throws elements in a path cannot be empty strings
    */
   __derive(path = []) {
-    if (!_.isArray(path) && !_.isString(path)) this.__excp(1);
+    path = validate(1, { path });
 
-    if (!path.length)
-      // an empty string or empty array means the root node path
-      return this.rootNodePath;
+    const { __dataMap, distinct, path_string_delimiter, rootNodePath } = this;
 
-    if (_.isString(path)) path = this.__s2p(path);
+    // an empty string or empty array means the root node path
+    if (!path.length) return rootNodePath;
+
+    if (_.isString(path)) path = s2p(path_string_delimiter, path);
 
     // no element in a path can be an empty string
-    if (_.some(path, (p) => p.length === 0)) this.__excp(2);
+    path = validate(2, { path });
 
-    if (_.isEqual(path, this.rootNodePath)) return path;
+    if (_.isEqual(path, rootNodePath)) return path;
 
     // internally, the path of a node MUST always begin with the root node path
-    path = _.isEqual([_.head(path)], this.rootNodePath)
+    path = _.isEqual([_.head(path)], rootNodePath)
       ? path // root node path is already there
-      : _.concat(this.rootNodePath, path);
+      : _.concat(rootNodePath, path);
 
     // when the node entry exists, return it.
-    if (this.__dataMap.has(this.__p2s(path))) return path;
+    if (__dataMap.has(p2s(path_string_delimiter, path))) return path;
 
     // when path length is 2 (root + path) they might want a descendent
-    if (this.distinct && path.length === 2) {
+    if (distinct && path.length === 2) {
       const np = _.find(
-        [...this.__dataMap.keys()],
-        (k) => _.last(this.__s2p(k)) === _.last(path)
+        [...__dataMap.keys()],
+        (k) => _.last(s2p(path_string_delimiter, k)) === _.last(path)
       );
-      if (np && !_.isEmpty(np)) path = this.__s2p(np);
+      if (np && !_.isEmpty(np)) path = s2p(path_string_delimiter, np);
     }
 
     return path;
-  }
-
-  /**
-   * Internal method to throw a defined exception.
-   *
-   * @access private
-   * @param {integer} id Required.
-   *
-   * The id of the message.
-   */
-  __excp(id, opts = {}) {
-    const m = {
-      1: `path must be an array or a string`,
-      2: `elements in a path cannot be empty strings`,
-      3: `show_root must be one of: 'yes', 'no', or 'auto`,
-      4: `path ${opts.path} does not exist, use has?`,
-      5: `function provided must return a node entry`,
-      6: `depth must be an integer`,
-      7: `depth cannot be zero when inclusive is false`,
-      8: `no ancestor exists for ${opts.path}`,
-      9: `non distinct trees cannot be merged into distinct trees`,
-      10: `ancestor must be a simple string or single element array`,
-      11: `ancestor ${opts.ancestor} cannot be used on non-distinct trees, full node id path for ${opts.path} is required`,
-      12: `path ${opts.path} already exists in this distinct tree with ancestor ${opts.ancestor}`,
-      14: `path must be a simple string, received ${opts.path}, ${opts.datum}, ${opts.ancestor}`,
-      15: `ancestor ${opts.ancestor} does not exist`,
-      16: `elements in path ${opts.path} cannot be duplicated with distinct trees`,
-      17: `order must be one of "asc, desc", was ${opts.order}`,
-      42: `all persons more than a mile high to leave the court`,
-    };
-    const e = id in m ? m[id] : "invalid exception";
-    throw new Error(e);
   }
 
   /**
@@ -1012,7 +1003,7 @@ class Tree {
    * A full node id path array.
    */
   __meta(path = []) {
-    if (!_.isArray(path) || path.length === 0) this.__excp(1);
+    path = validate(1, { path });
 
     const depth = _.tail(path).length;
     const hasParent = depth > 0;
@@ -1031,20 +1022,6 @@ class Tree {
   }
 
   /**
-   * Internal method to convert an array to a delimited string.
-   *
-   * @access private
-   * @param {Array} path Optional.
-   *
-   * Defaults to an empty array.
-   *
-   * @returns {String} path_string_delimiter delimited string.
-   */
-  __p2s(path = []) {
-    return _.join(path, this.path_string_delimiter);
-  }
-
-  /**
    * Internal method to provide the correct path expression based on Tree properties.
    *
    * @access private
@@ -1057,25 +1034,202 @@ class Tree {
    */
   __p2228t(path = []) {
     // probably unnecessary guard
-    if (!_.isArray(path) && !_.isString(path)) this.__excp(1);
-    let p = _.isString(path) ? this.__s2p(path) : path;
+    path = validate(1, { path });
+    const {
+      __dataMap,
+      distinct,
+      path_string_delimiter,
+      root_node_id,
+      show_root,
+    } = this;
+    let p = _.isString(path) ? s2p(path_string_delimiter, path) : path;
     const tip = _.last(p);
     const show =
-      this.show_root === "auto"
-        ? !!this.__dataMap.get(this.root_node_id)
-        : this.show_root === "yes";
+      show_root === "auto"
+        ? !!__dataMap.get(root_node_id)
+        : show_root === "yes";
 
-    return this.distinct ? tip : show ? p : p.length === 1 ? [] : _.tail(p);
+    return distinct ? tip : show ? p : p.length === 1 ? [] : _.tail(p);
   }
+}
 
-  /**
-   * Internal method to convert a path_string_delimiter delimited string to an array.
+/**
+ * Internal method to throw a defined exception.
+ *
+ * @access private
+ * @param {Integer} id Required. The id of the message.
+ * @param {Object} key/value pairs needed for validation and message rendering.
+ * @throws {Error} exception with formatted message.
+ *
+ */
+export function validate(id, opts = {}) {
+  const c = {
+    1: [
+      ({ path }) => !isArray(path) && !isString(path),
+      ({ path }) => `path must be an array or a string`,
+      ({ path }) => path,
+    ],
+    2: [
+      ({ path }) => _.some(path, (p) => p.length === 0),
+      ({ path }) => `elements in a path cannot be empty strings`,
+      ({ path }) => path,
+    ],
+    3: [
+      ({ show_root }) => !includes(show_root, ["yes", "no", "auto"]),
+      ({}) => `show_root must be one of: 'yes', 'no', or 'auto`,
+      ({ show_root }) => show_root,
+    ],
+    4: [
+      ({ path, tree }) => !tree.has(path),
+      ({ path, tree }) => `path ${path} does not exist, use has?`,
+      ({ path, tree }) => tree.__derive(path),
+    ],
+    5: [
+      ({ ret }) => !isArray(ret) || ret.length <= 1,
+      ({ ret }) => `function provided must return a node entry`,
+      ({ ret }) => ret,
+    ],
+    6: [
+      ({ depth }) => depth && !isInteger(depth),
+      ({ depth }) => `depth must be an integer`,
+    ],
+    7: [
+      ({ depth, inclusive }) => depth === 0 && !inclusive,
+      ({ depth, inclusive }) => `depth cannot be zero when inclusive is false`,
+    ],
+    8: [
+      ({ path, parentPath }) => isEmpty(parentPath),
+      ({ path, parentPath }) => `no ancestor exists for ${path}`,
+    ],
+    9: [
+      ({ sourceDistinct, targetDistinct }) => targetDistinct && !sourceDistinct,
+      ({ sourceDistinct, targetDistinct }) =>
+        `non distinct trees cannot be merged into distinct trees`,
+    ],
+    10: [
+      ({ ancestor }) =>
+        (!isString(ancestor) && !isArray(ancestor)) ||
+        (isArray(ancestor) && ancestor.length > 1),
+      ({ ancestor }) =>
+        `ancestor must be a simple string or single element array`,
+    ],
+    11: [
+      ({ distinct, path }) => !distinct,
+      ({ distinct, path }) =>
+        `the ancestor argument cannot be used to set nodes on non-distinct trees, full node id path for ${path} is required`,
+    ],
+    121: [
+      ({ ancestor, path, path_string_delimiter, tree }) => {
+        // no duplicate node id!
+        const p = tree.__derive(path);
+        const ta = p2s(
+          path_string_delimiter,
+          isString(ancestor) ? castArray(ancestor) : ancestor
+        );
+        const { distinctAncestor } = tree.__meta(p);
+        return ta !== distinctAncestor;
+      },
+      ({ ancestor, path, path_string_delimiter, tree }) => {
+        const p = tree.__derive(path);
+        const ta = p2s(
+          path_string_delimiter,
+          isString(ancestor) ? castArray(ancestor) : ancestor
+        );
+        const { distinctAncestor } = tree.__meta(p);
+        return `path ${ta} already exists in this distinct tree with ancestor ${distinctAncestor}`;
+      },
+    ],
+    /*
+    122: [
+      ({ k, path_string_delimiter, tip, tree }) => {
+        let ta = p2s(path_string_delimiter, this.__derive(tip));
+        return tree.__dataMap.has(ta) & (k !== ta);
+      },
+      ({ k, path_string_delimiter, tip, tree }) => {
+        meta = tree.__meta(tree.__derive(tip));
+        return `path ${tip} already exists in this distinct tree with ancestor ${meta.ancestor}`;
+      },
+    ],
+*/
+    14: [
+      ({ path, datum, ancestor, tree }) => tree.__derive(path).length > 2,
+      ({ path, datum, ancestor, tree }) =>
+        `path must be a simple string, received ${path}, ${datum}, ${ancestor}`,
+    ],
+    15: [
+      ({ ancestor, __dataMap, path_string_delimiter, tree }) =>
+        !__dataMap.has(p2s(path_string_delimiter, tree.__derive(ancestor))),
+      ({ ancestor, __dataMap, path_string_delimiter, tree }) =>
+        `ancestor ${ancestor} does not exist`,
+    ],
+    16: [
+      ({ idx, path, tip }) => includes(tip, takeRight(idx, path)),
+      ({ nidx, path, tip }) =>
+        `elements in path ${path} cannot be duplicated with distinct trees`,
+    ],
+    17: [
+      ({ order }) => !includes(order, ["asc", "desc"]),
+      ({ order }) => `order must be one of "asc, desc", was ${order}`,
+    ],
+    42: [
+      stubTrue,
+      () => `all persons more than a mile high to leave the court`,
+    ],
+    999: [stubTrue, () => `invalid or unknown exception`],
+  };
+  const [condition, error, ret = noop] = id in c ? c[id] : c[999];
+  if (condition(opts)) throw new Error(error);
+  return ret(opts);
+}
+
+/**
+   * Internal method to convert paths into arrays when necessary.
    *
    * @access private
-   * @param {String} pathString Optional.
-   * Defaults to an empty string.
-   */
-  __s2p(pathString = "") {
-    return _.split(pathString, this.path_string_delimiter);
-  }
+   * @param {*} path Optional.
+   * Must be a String, path_string_delimiter delimited String, or Array.
+   *
+   * When undefined, blank, or empty, the root node's path will be utilized.
+   *
+   * @returns {Array} The full path to the node.
+   *
+   * @throws path must be an array or a string
+   * @throws elements in a path cannot be empty strings
+
+*/
+export function deriveFullPath(tree) {
+  const { __dataMap, distinct, path_string_delimiter, rootNodePath } = tree;
+  return function (path) {
+    path = validate(1, { path });
+
+    if (!path.length)
+      // an empty string or empty array means the root node path
+      return rootNodePath;
+
+    if (isString(path)) path = s2p(path_string_delimiter, path);
+
+    // no element in a path can be an empty string
+    path = validate(2, { path });
+
+    if (isEqual(path, rootNodePath)) return path;
+
+    // internally, the path of a node MUST always begin with the root node path
+    path = isEqual(head(castArray(path)), rootNodePath)
+      ? path // root node path is already there
+      : concat(rootNodePath, path);
+
+    // return the node when it exists.
+    if (__dataMap.has(p2s(path_string_delimiter, path))) return path;
+
+    // when path length is 2 (root + path) they might want a descendent
+    if (distinct && path.length === 2) {
+      const np = find(
+        (k) => last(s2p(path_string_delimiter, k)) === last(path),
+        [...__dataMap.keys()]
+      );
+      if (np && !isEmpty(np)) path = s2p(path_string_delimiter, np);
+    }
+
+    return path;
+  };
 }

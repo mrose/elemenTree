@@ -6,6 +6,7 @@ import {
   p2228t,
   s2p,
   setIntermediates,
+  treeException,
 } from "../treeUtils";
 
 describe(`tree utilities`, () => {
@@ -38,10 +39,11 @@ describe(`tree utilities`, () => {
     expect(hasRootDatum(tree)).toBeTruthy();
   });
 
-  test.skip(`p2s() converts a path to a delimited string`, () => {
+  test(`p2s() converts a path to a delimited string`, () => {
     const tree = Tree.factory();
-    expect(p2s(tree, ["a", "b", "c"])).toEqual("a|b|c");
-    expect(p2s(tree, undefined)).toEqual("");
+    const { path_string_delimiter } = tree;
+    expect(p2s(path_string_delimiter, ["a", "b", "c"])).toEqual("a|b|c");
+    expect(p2s(path_string_delimiter, undefined)).toEqual("");
   });
 
   test.skip(`p2228t() `, () => {
@@ -51,10 +53,15 @@ describe(`tree utilities`, () => {
     expect(p2228t(tree1, "a|b|c")).toEqual();
   });
 
-  test.skip(`s2p() converts a delimited string to a path`, () => {
+  test(`s2p() converts a delimited string to a path`, () => {
     const tree = Tree.factory({ path_string_delimiter: ":" });
-    expect(s2p(tree, "a:b:c")).toEqual(["a", "b", "c"]);
+    expect(s2p(tree.path_string_delimiter, "a:b:c")).toEqual(["a", "b", "c"]);
   });
 
   test.skip(`setIntermediates()  `, () => {});
+
+  test(`treeException() throws an error`, () => {
+    expect(() => treeException(42)).toThrow();
+    //.toThrowWithMessage(`all persons more than a mile high to leave the court`);
+  });
 });
