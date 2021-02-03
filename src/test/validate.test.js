@@ -1,6 +1,10 @@
 import { validate } from "../tree";
 
 describe(`validate function`, () => {
+  test(`validate throws on invalid path`, () => {
+    expect(() => validate(1, {}).toBe([]));
+  });
+
   test(`validate throws on invalid condition`, () => {
     expect(() => validate(3, { show_root: "goo" })).toThrow();
 

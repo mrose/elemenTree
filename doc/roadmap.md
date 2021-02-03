@@ -1,5 +1,4 @@
 - roadmap:
-- treeUtils /flow
 - filter
 - entries(), keys(), & values() return non-nested iterators
 - update merge() after entries() is native

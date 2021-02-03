@@ -36,9 +36,8 @@ describe(`The set method`, () => {
 
     test(`throws an error when ancestor argument is used but ancestor does not exist`, () => {
       const tree = Tree.factory({ distinct: true });
-      const ancestor = "b";
-      tree.set("a", { id: "a", value: 2 });
-      expect(() => tree.set("c", { id: "c", value: 4 }, ancestor)).toThrow(
+      const ancestor = "a";
+      expect(() => tree.set("b", { id: "b", value: 3 }, ancestor)).toThrow(
         `ancestor ${ancestor} does not exist`
       );
     });
