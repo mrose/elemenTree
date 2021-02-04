@@ -44,10 +44,10 @@ describe(`The entriesOf method`, () => {
       const tree = Tree.factory({ datum: { id: "root" }, distinct: false });
 
       // dumb, but someone will do it
-      tree.show_root = "no";
+      tree.showRoot = "no";
       expect(tree.entriesOf(undefined, true)).toEqual([[[], { id: "root" }]]);
 
-      tree.show_root = "auto";
+      tree.showRoot = "auto";
       expect(tree.entriesOf(undefined, true)).toEqual([
         [["root"], { id: "root" }],
       ]);
@@ -75,7 +75,7 @@ describe(`The entriesOf method`, () => {
     });
 
     test(`returns a flat entries array of descendents when nested is false`, () => {
-      const tree = Tree.factory({ distinct: false, show_root: "auto" });
+      const tree = Tree.factory({ distinct: false, showRoot: "auto" });
       tree.set("c", { id: "c" });
       tree.set("b", { id: "b" });
       tree.set("a", { id: "a" });
@@ -84,7 +84,7 @@ describe(`The entriesOf method`, () => {
       tree.set(["a", "e", "f"], { id: "f" });
       tree.set(["a", "e", "g"], { id: "g" });
 
-      // show_root is auto and root has no datum so root is not included
+      // showRoot is auto and root has no datum so root is not included
       expect(tree.entriesOf(["a"], true, false, 1)).toEqual([
         [["a"], { id: "a" }],
         [["a", "d"], { id: "d" }],
@@ -103,8 +103,8 @@ describe(`The entriesOf method`, () => {
         [["a", "e", "g"], { id: "g" }],
       ]);
 
-      // set show_root to 'yes' so root is included
-      tree.show_root = "yes";
+      // set showRoot to 'yes' so root is included
+      tree.showRoot = "yes";
       expect(tree.entriesOf(["a"], true, false, 1)).toEqual([
         [["root", "a"], { id: "a" }],
         [["root", "a", "d"], { id: "d" }],
@@ -128,7 +128,7 @@ describe(`The entriesOf method`, () => {
       const tree = Tree.factory({
         datum: { id: "root" },
         distinct: false,
-        show_root: "no",
+        showRoot: "no",
       });
       tree.set("c", { id: "c" });
       tree.set("b", { id: "b" });
@@ -187,7 +187,7 @@ describe(`The entriesOf method`, () => {
         ],
       ]);
 
-      tree.show_root = "auto";
+      tree.showRoot = "auto";
       expect(tree.entriesOf("root", true, true)).toEqual([
         [
           ["root"],

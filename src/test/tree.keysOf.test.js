@@ -83,7 +83,7 @@ describe(`The keysOf method`, () => {
         ["a", "e", "g"],
       ]);
 
-      tree.show_root = "yes";
+      tree.showRoot = "yes";
       expect(tree.keysOf(["a"], true, false, 1)).toEqual([
         ["root", "a"],
         ["root", "a", "d"],
@@ -163,7 +163,7 @@ describe(`The keysOf method`, () => {
         ],
       ]);
 
-      tree.show_root = "no";
+      tree.showRoot = "no";
       expect(tree.keysOf("root", true, true)).toEqual([
         [
           [],

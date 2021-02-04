@@ -6,11 +6,11 @@ describe(`validate function`, () => {
   });
 
   test(`validate throws on invalid condition`, () => {
-    expect(() => validate(3, { show_root: "goo" })).toThrow();
+    expect(() => validate(3, { showRoot: "goo" })).toThrow();
 
     //.toThrowWithMessage(`all persons more than a mile high to leave the court`);
   });
   test(`validate returns on valid condition`, () => {
-    expect(validate(3, { show_root: "auto" })).toBe("auto");
+    expect(validate(3, { showRoot: "auto" })).toBe("auto");
   });
 });

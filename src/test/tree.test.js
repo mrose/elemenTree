@@ -24,7 +24,7 @@ describe(`tree properties`, () => {
     expect(tree0.get("")).toEqual(undefined);
     expect(tree0.get(["root"])).toEqual(undefined);
 
-    const tree1 = Tree.factory({ root_node_id: "qux" });
+    const tree1 = Tree.factory({ rootNodeId: "qux" });
     expect(tree1.rootNodePath).toEqual(["qux"]);
     expect(tree1.get("")).toEqual(undefined);
     expect(tree1.get(["qux"])).toEqual(undefined);

@@ -41,9 +41,9 @@ describe(`tree utilities`, () => {
 
   test(`p2s() converts a path to a delimited string`, () => {
     const tree = Tree.factory();
-    const { path_string_delimiter } = tree;
-    expect(p2s(path_string_delimiter, ["a", "b", "c"])).toEqual("a|b|c");
-    expect(p2s(path_string_delimiter, undefined)).toEqual("");
+    const { pathStringDelimiter } = tree;
+    expect(p2s(pathStringDelimiter, ["a", "b", "c"])).toEqual("a|b|c");
+    expect(p2s(pathStringDelimiter, undefined)).toEqual("");
   });
 
   test.skip(`p2228t() `, () => {
@@ -54,8 +54,8 @@ describe(`tree utilities`, () => {
   });
 
   test(`s2p() converts a delimited string to a path`, () => {
-    const tree = Tree.factory({ path_string_delimiter: ":" });
-    expect(s2p(tree.path_string_delimiter, "a:b:c")).toEqual(["a", "b", "c"]);
+    const tree = Tree.factory({ pathStringDelimiter: ":" });
+    expect(s2p(tree.pathStringDelimiter, "a:b:c")).toEqual(["a", "b", "c"]);
   });
 
   test.skip(`setIntermediates()  `, () => {});

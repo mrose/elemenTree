@@ -4,22 +4,22 @@ describe(`A tree's static factory method`, () => {
   test(`should be used to create a new tree`, () => {
     const tree = Tree.factory();
     expect(tree).toBeInstanceOf(Tree);
-    expect(tree.path_string_delimiter).toBe("|");
-    expect(tree.root_node_id).toBe("root");
+    expect(tree.pathStringDelimiter).toBe("|");
+    expect(tree.rootNodeId).toBe("root");
   });
 
   test(`may be provided a root node id which defaults to "root"`, () => {
     const tree0 = Tree.factory();
-    expect(tree0.root_node_id).toBe("root");
-    const tree1 = Tree.factory({ root_node_id: "Larry" });
-    expect(tree1.root_node_id).toBe("Larry");
+    expect(tree0.rootNodeId).toBe("root");
+    const tree1 = Tree.factory({ rootNodeId: "Larry" });
+    expect(tree1.rootNodeId).toBe("Larry");
   });
 
   test(`may be provided a path string delimiter which defaults to "|"`, () => {
     const tree0 = Tree.factory();
-    expect(tree0.path_string_delimiter).toEqual("|");
-    const tree1 = Tree.factory({ path_string_delimiter: "_" });
-    expect(tree1.path_string_delimiter).toBe("_");
+    expect(tree0.pathStringDelimiter).toEqual("|");
+    const tree1 = Tree.factory({ pathStringDelimiter: "_" });
+    expect(tree1.pathStringDelimiter).toBe("_");
   });
 
   test(`may be provided with data for the root node`, () => {
