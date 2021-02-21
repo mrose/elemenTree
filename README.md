@@ -17,10 +17,43 @@ $ npm install simplicitree
 ```bash
 import { Tree } from "simplicitree";
 
-// use the factory method: no positional parameters (none are required)
-const myTree = Tree.factory();
 ```
 
-## Api & Docs
+## API
+
+```
+// Create a tree, all configuration is optional
+const myTree = Tree.factory({ datamap, datum, distinct, pathStringDelimiter, rootNodeId, showRoot });
+
+.datum
+.depth
+.distinct
+.hasDescendents
+.hasRootDatum
+.pathStringDelimiter
+.rootNodeId
+.rootNodePath
+.showRoot
+.size
+
+.cascade()
+.clear()
+.delete()
+.entriesOf()
+.everyOf()
+.firstDescendentsOf()
+.get()
+.getAncestorOf()
+.has
+.keysOf()
+.merge()
+.set()
+.someOf()
+.traverse()
+.valuesOf()
+
+```
+
+## More
 
 <https://mrose.github.io/simplicitree/>
