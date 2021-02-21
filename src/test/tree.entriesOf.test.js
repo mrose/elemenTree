@@ -15,13 +15,14 @@ describe(`The entriesOf method`, () => {
     expect(tree.entriesOf(["a"], true, false, 0)).toBeInstanceOf(Array);
   });
 
-  // TODO: throws when path is invalid, inclusive is invalid, nested is invalid
+  // TODO: throws when nested is invalid
 
   describe(`for trees which have non-distinct node Ids`, () => {
     test(`returns an empty entries array when the path does not refer to an existing node`, () => {
       const tree = Tree.factory({ distinct: false });
       tree.set(["a"], { id: "a" });
-      expect(tree.entriesOf(["b"])).toEqual([]);
+      const t4 = tree.entriesOf(["b"]);
+      expect(t4).toEqual([]);
     });
 
     test(`returns an empty entries array when no descendents exist and inclusive is false`, () => {
@@ -36,8 +37,10 @@ describe(`The entriesOf method`, () => {
       expect(tree.entriesOf(["a"])).toEqual([]);
 
       tree.set(["a", "b"], { id: "b" });
-      expect(tree.entriesOf(["a", "b"])).toEqual([]);
-      expect(tree.entriesOf("a|b")).toEqual([]);
+      const t5a = tree.entriesOf(["a", "b"]);
+      expect(t5a).toEqual([]);
+      const t5b = tree.entriesOf("a|b");
+      expect(t5b).toEqual([]);
     });
 
     test(`returns a single entry when no descendents exist and inclusive is true`, () => {
@@ -85,7 +88,9 @@ describe(`The entriesOf method`, () => {
       tree.set(["a", "e", "g"], { id: "g" });
 
       // showRoot is auto and root has no datum so root is not included
-      expect(tree.entriesOf(["a"], true, false, 1)).toEqual([
+      // path, inclusive, nested, depth
+      const t7a = tree.entriesOf(["a"], true, false, 1);
+      expect(t7a).toEqual([
         [["a"], { id: "a" }],
         [["a", "d"], { id: "d" }],
         [["a", "e"], { id: "e" }],
@@ -139,7 +144,7 @@ describe(`The entriesOf method`, () => {
       tree.set(["a", "e", "f"], { id: "f" });
       tree.set(["a", "e", "g"], { id: "g" });
 
-      expect(tree.entriesOf(["a"], true, true, 1)).toEqual([
+      const expected = [
         [
           ["a"],
           { id: "a" },
@@ -148,7 +153,9 @@ describe(`The entriesOf method`, () => {
             [["a", "e"], { id: "e" }, []],
           ],
         ],
-      ]);
+      ];
+      const received = tree.entriesOf(["a"], true, true, 1);
+      expect(received).toEqual(expected);
 
       expect(tree.entriesOf(["a"], false, true)).toEqual([
         [["a", "d"], { id: "d" }, [[["a", "d", "h"], { id: "h" }, []]]],
@@ -292,7 +299,9 @@ describe(`The entriesOf method`, () => {
       tree.set("f", { id: "f" }, "e");
       tree.set("g", { id: "g" }, "e");
 
-      expect(tree.entriesOf(["a"], true, true, 1)).toEqual([
+      let received, expected;
+      received = tree.entriesOf(["a"], true, true, 1);
+      expected = [
         [
           "a",
           { id: "a" },
@@ -301,7 +310,8 @@ describe(`The entriesOf method`, () => {
             ["e", { id: "e" }, []],
           ],
         ],
-      ]);
+      ];
+      expect(received).toEqual(expected);
 
       expect(tree.entriesOf(["a"], false, true)).toEqual([
         ["d", { id: "d" }, [["h", { id: "h" }, []]]],

@@ -2,6 +2,7 @@ import add from "lodash/fp/add";
 import castArray from "lodash/fp/castArray";
 import concat from "lodash/fp/concat";
 import countBy from "lodash/fp/countBy";
+import curry from "lodash/fp/curry";
 import every from "lodash/fp/every";
 import filter from "lodash/fp/filter";
 import find from "lodash/fp/find";
@@ -13,6 +14,7 @@ import includes from "lodash/fp/includes";
 import isArray from "lodash/fp/isArray";
 import isEmpty from "lodash/fp/isEmpty";
 import isEqual from "lodash/fp/isEqual";
+import isFunction from "lodash/fp/isFunction";
 import isInteger from "lodash/fp/isInteger";
 import isNil from "lodash/fp/isNil";
 import isString from "lodash/fp/isString";
@@ -23,15 +25,17 @@ import map from "lodash/fp/map";
 import max from "lodash/fp/max";
 import min from "lodash/fp/min";
 import noop from "lodash/fp/noop";
+import partition from "lodash/fp/partition";
 import pick from "lodash/fp/pick";
+import reduce from "lodash/fp/reduce";
 import reverse from "lodash/fp/reverse";
+import size from "lodash/fp/size";
 import some from "lodash/fp/some";
 import split from "lodash/fp/split";
 import startsWith from "lodash/fp/startsWith";
 import stubTrue from "lodash/fp/stubTrue";
 import tail from "lodash/fp/tail";
 import take from "lodash/fp/take";
-import takeRight from "lodash/fp/takeRight";
 import times from "lodash/fp/times";
 import values from "lodash/fp/values";
 
@@ -119,8 +123,8 @@ class Tree {
       writable: false,
     });
 
-    this.__dataMap = dataMap || new Map(); //key = path[], value = {data} thar be data
-    this.__dataMap.set(rootNodeId, datum);
+    this._dataMap = dataMap || new Map(); //key = path[], value = {data} thar be data
+    this._dataMap.set(rootNodeId, datum);
     if (showRoot) this.showRoot = validate(3, { showRoot });
   }
 
@@ -208,11 +212,11 @@ class Tree {
    * @returns {Number} The count of nodes in the longest path, including the root.
    */
   get depth() {
-    const { __dataMap, pathStringDelimiter } = this;
+    const { _dataMap, pathStringDelimiter } = this;
     return flow(
       map((key) => s2p(this)(key).length),
       max
-    )([...__dataMap.keys()]);
+    )([..._dataMap.keys()]);
   }
 
   /**
@@ -220,8 +224,19 @@ class Tree {
    * @returns {Boolean} True when a node other than the root node exists, else False.
    */
   get hasDescendents() {
-    return this.__dataMap.size > 1;
+    return this._dataMap.size > 1;
   }
+
+  /**
+   * @readonly
+   * @returns {Boolean} True when the root datum is not undefined, else False.
+   */
+  get hasRootDatum() {
+    if (!this._dataMap.has(this.rootNodeId)) return false;
+    if (this._dataMap.get(this.rootNodeId) === undefined) return false;
+    return true;
+  }
+
 
   /**
    * @readonly
@@ -236,7 +251,7 @@ class Tree {
    * @returns {Number} The number of nodes including the root node.
    */
   get size() {
-    return this.__dataMap.size;
+    return this._dataMap.size;
   }
 
   /**
@@ -260,33 +275,24 @@ class Tree {
    *
    * When true, the entry for the path itself will also be provided to the function.
    * @returns {Void}
-   * @throws node does not exist, use has?
+   * @throws path does not exist, use has?
    * @throws function provided must return undefined or an [path, datum] entry
    */
   cascade(fn = identity, path, inclusive = false) {
-    path = validate(4, { path, tree: this });
-
-    const { __dataMap, pathStringDelimiter } = this;
-    const target = p2s(this)(path);
-    let fe = flow(
-      filter(([sk, d]) => {
-        if (!inclusive && sk === target) return false;
-        return startsWith(target, sk);
-      }),
-      map(([k, v]) => [p2228t(this)(k), v])
-    )([...__dataMap.entries()]);
+    const tree = this;
+    path = validate(4, { path, tree });
 
     forEach((entry) => {
       const [ek, ev] = entry;
-      const ret = fn([ek, ev], this);
+      const ret = fn([ek, ev], tree);
       if (isUndefined(ret)) return;
       // entry must be an entry (array with path & datum elements) or undefined
       let [p, v] = validate(5, { ret });
       // we don't know what key we're getting back but we better have it
-      p = validate(4, { path: p, tree: this });
-
-      __dataMap.set(p2s(this)(p), v);
-    })(fe);
+      p = validate(4, { path: p, tree });
+      // TODO: use set()?
+      this._dataMap.set(p2s(tree)(p), v);
+    })(map(([k, v]) => ([p2228t(tree)(k), v]))(descendents(inclusive, undefined, tree, path)));
   }
 
   /**
@@ -294,8 +300,9 @@ class Tree {
    * @returns {Void}
    */
   clear() {
-    this.__dataMap.clear();
-    this.__dataMap.set(this.rootNodeId, undefined);
+    const tree = this;
+    tree._dataMap.clear();
+    tree._dataMap.set(tree.rootNodeId, undefined);
   }
 
   /**
@@ -310,23 +317,16 @@ class Tree {
 
    * When true, the entry for the path itself will be included in the group to be deleted.
 
-   * @return {Boolean} True when the node(s) to be removed exist(s), else False.
+   * @return {Boolean} True when all removed node(s) existed, else False.
    */
   delete(path, inclusive = true) {
-    const p =  deriveFullPath(this)(path);
-    const { __dataMap, pathStringDelimiter } = this;
-    const target = p2s(this)(p);
-
-    let keys = filter((k) => {
-      if (!inclusive && k === target) return false;
-      return startsWith(target, k);
-    }, [...__dataMap.keys()]);
-
-    let allTrue = Boolean(keys.length);
-    forEach((k) => {
-      allTrue = allTrue && __dataMap.delete(k);
-    })(keys);
-    return allTrue;
+    const tree = this;
+    const fe = descendents(inclusive, undefined, tree, path);
+    if (!size(fe)) return false;
+    // TODO: overEvery?
+    return reduce((acc, [k, v]) => {
+      return acc && tree._dataMap.delete(p2s(tree)(k));
+    }, true,  fe);
   }
 
   /**
@@ -367,47 +367,13 @@ class Tree {
    */
 
   entriesOf(path, inclusive = false, nested = false, depth) {
-    const p = deriveFullPath(this)(path);
-    validate(6, { depth });
-    validate(7, { depth, inclusive });
-
-    const { __dataMap, depth: treeDepth, pathStringDelimiter } = this;
-    const maxDepth = depth ? p.length + depth : treeDepth;
-    const target = p2s(this)(p);
-    let fe = filter(([sk, d]) => {
-      const ak = s2p(this)(sk);
-      if (!inclusive && sk === target) return false;
-      return startsWith(target, sk) && ak.length <= maxDepth;
-    })([...__dataMap.entries()]);
-
-    if (!nested) return map(([k, v]) => [p2228t(this)(k), v])(fe);
-
-    const nest = (entries) =>
-      map(([tk, v]) => {
-        const ak = s2p(this)(tk);
-        const descendents = filter(
-          ([k, v]) =>
-            startsWith(tk, k) &&
-            s2p(this)(k).length === ak.length + 1
-        )(fe);
-        return [
-          p2228t(this)(tk),
-          v,
-          descendents.length ? nest(descendents) : [],
-        ];
-      })(entries);
-
-    // minimum depth
-    const mnd = flow(
-      map((key) => s2p(this)(key).length),
-      min
-    )(fe);
-
-    // base nodes. we won't sort so maybe the top nodes will remain in insertion order
-    const bn = filter(
-      ([k, v]) => s2p(this)(k).length === mnd
-    )(fe);
-    return nest(bn);
+    const tree = this;
+    const keyFormatter = p2228t(tree);
+    const fe = descendents(inclusive, depth, tree, path);
+    return (nested)
+      ? nest(tree, keyFormatter, undefined, fe)
+      : map(([k, v]) => [keyFormatter(k), v])(fe)
+      ;
   }
 
   /**
@@ -416,7 +382,7 @@ class Tree {
    * WARNING: When the qualifiying entries are an empty array this method returns True.
 
    * @param {Function} fn Optional.
-   * Defaults to identity.
+   * Defaults to a function that always returns True.
    *
    * The function to apply to each node which should return truthy or falsey.
    *
@@ -437,29 +403,17 @@ class Tree {
    *
    * @returns {Boolean} True when all qualifying entries pass the test implemented by the provided function, else False.
    *
+   * @throws argument supplied must be a function
    * @throws path must be an array or a string
    * @throws node does not exist, use has?
    * @throws depth must be an integer
    * @throws depth cannot be zero when inclusive is false
    */
-  everyOf(fn = identity, path, inclusive = false, depth) {
-    const p = validate(4, { path, tree: this });
-    validate(6, { depth });
-    validate(7, { depth, inclusive });
-
-    const { __dataMap, depth: treeDepth, pathStringDelimiter } = this;
-    const maxDepth = depth ? p.length + depth : treeDepth;
-
-    const target = p2s(this)(p);
-    let fe = flow(
-      filter(([sk, d]) => {
-        const ak = s2p(this)(sk);
-        if (!inclusive && sk === target) return false;
-        return startsWith(target, sk) && ak.length <= maxDepth;
-      }),
-      map(([k, v]) => [p2228t(this)(k), v])
-    )([...__dataMap.entries()]);
-    return every(fn, fe);
+  everyOf(fn = stubTrue, path, inclusive = false, depth) {
+    const tree = this;
+    validate(4, { path, tree });
+    validate(18, { fn });
+    return every(fn, map(([k, v]) => [p2228t(tree)(k), v])(descendents(inclusive, depth, tree, path)));
   }
 
   /**
@@ -480,17 +434,8 @@ class Tree {
    * @throws node does not exist, use has?
    */
   firstDescendentsOf(path) {
-    const p = deriveFullPath(this)(path);
-    const { __dataMap, pathStringDelimiter } = this;
-    const fdo = ([sk, v]) => {
-      if (s2p(this)(sk).length !== p.length + 1) return false;
-      return startsWith(p2s(this)(p), sk);
-    };
-
-    return flow(
-      filter(fdo),
-      map(([sk, v]) => [p2228t(this)(sk), v])
-    )([...__dataMap.entries()]);
+    const tree = this;
+    return map(([k, v]) => [p2228t(tree)(k), v])(descendents(false, 1, tree, path));
   }
 
   /**
@@ -511,9 +456,9 @@ class Tree {
    * @throws node does not exist, use has()?
    */
   get(path) {
-    const p = validate(4, { path, tree: this });
-    const { __dataMap, pathStringDelimiter } = this;
-    return __dataMap.get(p2s(this)(p));
+    const tree = this;
+    const fp = validate(4, { path, tree });
+    return tree._dataMap.get(p2s(tree)(fp));
   }
 
   /**
@@ -531,10 +476,12 @@ class Tree {
    * @throws no ancestor exists for root node
    */
   getAncestorOf(path) {
-    path = validate(4, { path, tree: this });
-    const { parentPath } = meta(this)(path);
-    validate(8, { path: this.rootNodeId, parentPath });
-    return this.get(parentPath);
+    const tree = this;
+    path = validate(4, { path, tree });
+    const { rootNodeId } = tree;
+    const { parentPath } = meta(tree)(path);
+    validate(8, { path:rootNodeId, parentPath });
+    return tree.get(parentPath);
   }
 
   /**
@@ -550,20 +497,9 @@ class Tree {
    * @throws path must be an array or string
    */
   has(path) {
-    const p = deriveFullPath(this)(path);
-    return this.__dataMap.has(p2s(this)(p));
-  }
-
-  /**
-   * Check whether the root node has a data reference.
-   *
-   * @access private
-   * @returns {Boolean} When the root datum is not undefined returns True, else False.
-   */
-  hasRootDatum() {
-    if (!this.__dataMap.has(this.rootNodeId)) return false;
-    if (this.__dataMap.get(this.rootNodeId) === undefined) return false;
-    return true;
+    const tree = this;
+    const p = deriveFullPath(tree)(path);
+    return tree._dataMap.has(p2s(tree)(p));
   }
 
   /**
@@ -604,41 +540,13 @@ class Tree {
    * @throws depth cannot be zero when inclusive is false
    */
   keysOf(path, inclusive = false, nested = false, depth) {
-    const p = deriveFullPath(this)(path);
-    validate(6, { depth });
-    validate(7, { depth, inclusive });
-
-    const { __dataMap, depth: treeDepth, pathStringDelimiter } = this;
-    const maxDepth = depth ? p.length + depth : treeDepth;
-    const target = p2s(this)(p);
-
-    let fe = filter((k) => {
-      const ak = s2p(this)(k);
-      if (!inclusive && k === target) return false;
-      return startsWith(target, k) && ak.length <= maxDepth;
-    })([...__dataMap.keys()]);
-
-    if (!nested) return map((k) => p2228t(this)(k))(fe);
-
-    const nest = (keys) =>
-      map((tk) => {
-        const ak = s2p(this)(tk);
-        const descendents = filter((k) =>
-            startsWith(tk, k) &&
-            s2p(this)(k).length === ak.length + 1
-        , fe);
-        return [p2228t(this)(tk), descendents.length ? nest(descendents) : []];
-      })(keys);
-
-    // minimum depth
-    const mnd = flow(
-      map((key) => s2p(this)(key).length),
-      min
-    )(fe);
-
-    // base nodes. we won't sort so at least the top nodes will remain in insertion order
-    const bn = filter((k) => s2p(this)(k).length === mnd)(fe);
-    return nest(bn);
+    const tree = this;
+    const keyFormatter = p2228t(tree);
+    const fe = descendents(inclusive, depth, tree, path);
+    return (nested)
+      ? nest(tree, keyFormatter, 'keys', fe)
+      : map(([k, v]) => keyFormatter(k))(fe)
+      ;
   }
 
   /**
@@ -647,15 +555,16 @@ class Tree {
    * @throws non distinct trees cannot be merged into distinct trees
    */
   merge(source) {
+    const tree = this;
     validate(9, {
       sourceDistinct: source.distinct,
-      targetDistinct: this.distinct,
+      targetDistinct: tree.distinct,
     });
 
-    const ies = source.__dataMap.entries();
+    const ies = source._dataMap.entries();
     flow(
       map(([k, v]) => [split(source.pathStringDelimiter, k), v]),
-      forEach(([k, v]) => this.set(k, v))
+      forEach(([k, v]) => tree.set(k, v))
     )([...ies]);
   }
 
@@ -695,7 +604,7 @@ class Tree {
   set(path, datum = undefined, ancestor = undefined) {
     let d;
     let p = deriveFullPath(this)(path);
-    const { __dataMap, distinct, pathStringDelimiter, rootNodeId } = this;
+    const { _dataMap, distinct, pathStringDelimiter, rootNodeId } = this;
     
     if (!isNil(ancestor)) {
       validate(11, { distinct, path });
@@ -707,12 +616,12 @@ class Tree {
     if (distinct) {
       if (!isNil(ancestor)) {
         // if it exists
-        if (__dataMap.has(p2s(this)(p))) {
+        if (_dataMap.has(p2s(this)(p))) {
           // no duplicate node id!
           validate(121, { ancestor, path, pathStringDelimiter, tree: this });
 
           // is it update
-          __dataMap.set(p2s(this)(p), datum);
+          _dataMap.set(p2s(this)(p), datum);
           return p2228t(this)(p);
         }
 
@@ -723,23 +632,23 @@ class Tree {
 
       // check ancestry distinctyness
       // for the tip of each path, validate that the ancestor is correct
-      const fullAncestorsForPath = allKeysForPath(p);
-      forEach((p) => validate(122, {path:p, tree:this}), fullAncestorsForPath);
+      const lineage = lineageForPath(p);
+      forEach((p) => validate(122, {path:p, tree:this}), lineage);
       validate(16, { path: p});
     } // end of distincty town
 
     if (p.length === 1) {
-      __dataMap.set(rootNodeId, datum);
+      _dataMap.set(rootNodeId, datum);
       return castArray(rootNodeId);
     }
 
     // set intermediate nodes
     flow(
-      filter((fp) => !__dataMap.has(p2s(this)(fp))),
-      forEach((k) => __dataMap.set(p2s(this)(k), undefined))
-    )(allKeysForPath(p));
+      filter((fp) => !_dataMap.has(p2s(this)(fp))),
+      forEach((k) => _dataMap.set(p2s(this)(k), undefined))
+    )(lineageForPath(p));
 
-    __dataMap.set(p2s(this)(p), datum);
+    _dataMap.set(p2s(this)(p), datum);
     // might we end up setting an insertion order number/index/graph coords?
     return p2228t(this)(p);
   }
@@ -769,30 +678,17 @@ class Tree {
    *
    * @returns {Boolean} True when all datums in the tree pass the test implemented by the provided function, else False.
    *
+   * @throws argument supplied must be a function
    * @throws path must be an array or a string
    * @throws node does not exist, use has?
    * @throws depth must be an integer
    * @throws depth cannot be zero when inclusive is false
    */
-  someOf(fn = identity, path, inclusive = false, depth) {
-    const p = validate(4, { path, tree: this });
-    validate(6, { depth });
-    validate(7, { depth, inclusive });
-
-    const { __dataMap, depth: treeDepth, pathStringDelimiter } = this;
-    const maxDepth = depth ? p.length + depth : treeDepth;
-
-    const target = p2s(this)(p);
-    let fe = flow(
-      filter(([sk, d]) => {
-        const ak = s2p(this)(sk);
-        if (!inclusive && sk === target) return false;
-        return startsWith(target, sk) && ak.length <= maxDepth;
-      }),
-      map(([k, v]) => [p2228t(this)(k), v])
-    )([...__dataMap.entries()]);
-
-    return some(fn, fe);
+   someOf(fn = stubTrue, path, inclusive = false, depth) {
+    const tree = this;
+    validate(4, { path, tree });
+    validate(18, { fn });
+    return some(fn, map(([k, v]) => [p2228t(tree)(k), v])(descendents(inclusive, depth, tree, path)));
   }
 
   /**
@@ -826,12 +722,12 @@ class Tree {
 
     validate(17, { order });
 
-    const { __dataMap } = this;
-    const keys = (order === "asc") ? reverse(allKeysForPath(path)) : allKeysForPath(path);
+    const { _dataMap } = this;
+    const keys = (order === "asc") ? reverse(lineageForPath(path)) : lineageForPath(path);
 
     forEach((k) => {
       const sk = p2s(this)(k);
-      const d = __dataMap.get(sk);
+      const d = _dataMap.get(sk);
       let entry = [p2228t(this)(k), d];
 
       const ret = fn(entry, this);
@@ -840,7 +736,7 @@ class Tree {
       let [p, v] = validate(5, { ret });
       // we don't know what key we're getting back but we better have it
       p = validate(4, { path: p, tree: this });
-      __dataMap.set(p2s(this)(p), v);
+      _dataMap.set(p2s(this)(p), v);
     }, keys);
   }
 
@@ -881,45 +777,16 @@ class Tree {
    * @throws depth cannot be zero when inclusive is false
    */
   valuesOf(path, inclusive = false, nested = false, depth) {
-    const p = deriveFullPath(this)(path);
     validate(6, { depth });
     validate(7, { depth, inclusive });
 
-    const { __dataMap, depth: treeDepth, pathStringDelimiter } = this;
-    const maxDepth = depth ? p.length + depth : treeDepth;
-    const target = p2s(this)(p);
-    let fe = filter(([sk, d]) => {
-      const ak = s2p(this)(sk);
-      if (!inclusive && sk === target) return false;
-      return startsWith(target, sk) && ak.length <= maxDepth;
-    })([...__dataMap.entries()]);
-
-    if (!nested) return map(([k, v]) => v)(fe);
-
-    const nest = (entries) =>
-      map(([tk, v]) => {
-        const ak = s2p(this)(tk);
-        const descendents = filter(
-          ([k, v]) =>
-            startsWith(tk, k) &&
-            s2p(this)(k).length === ak.length + 1
-        )(fe);
-        return [v, descendents.length ? nest(descendents) : []];
-      })(entries);
-
-    // minimum depth
-    const mnd = flow(
-      map((key) => s2p(this)(key).length),
-      min
-    )(fe);
-
-    // base nodes. we won't sort so at least the top nodes will remain in insertion order
-    const bn = filter(([k, v]) => s2p(this)(k).length === mnd)(
-      fe
-    );
-    return nest(bn);
+    const tree = this;
+    const fe = descendents(inclusive, depth, tree, path);
+    return (nested)
+      ? nest(tree, undefined, 'values', fe)
+      : map(([k, v]) => v)(fe)
+      ;
   }
-
 
 }
 
@@ -966,8 +833,8 @@ export function validate(id, opts = {}) {
       ({ depth }) => `depth must be an integer`,
     ],
     7: [
-      ({ depth, inclusive }) => depth === 0 && !inclusive,
-      ({ depth, inclusive }) => `depth cannot be zero when inclusive is false`,
+      ({ depth, inclusive }) => depth < 1 && !inclusive,
+      ({ depth, inclusive }) => `depth cannot be less than 1 when inclusive is false`,
     ],
     8: [
       ({ path, parentPath }) => isEmpty(parentPath),
@@ -1040,6 +907,15 @@ export function validate(id, opts = {}) {
       ({ order }) => !includes(order, ["asc", "desc"]),
       ({ order }) => `order must be one of "asc, desc", was ${order}`,
     ],
+    18: [
+      ({ fn }) => !isFunction(fn),
+      () => `argument supplied must be a function`,
+    ],
+    19: [
+      ({ only }) => !includes(only, ["keys", "values", undefined]),
+      ({ only }) => `only must be one of "keys", "values, or undefined, was ${only}`,
+
+    ],
     42: [
       stubTrue,
       () => `all persons more than a mile high to leave the court`,
@@ -1053,31 +929,11 @@ export function validate(id, opts = {}) {
 }
 
 /**
- * curried function to elaborate the set of paths for a full path
- *
- * @param {Tree}
- * @returns {Function}
- * 
- * @param {Array} path Required.
- * Must be a full path to a node
- * 
- * The returned function accepts a single parameter:
- * @param {Array} path Required.
- * Defaults to an empty array.
- *
- * @returns {Array} a descending (from the root) array of paths to the node
- */
-export function allKeysForPath(path) {
-  return times((i) => take(add(1, i), path), path.length);
-};
-
-/**
- * curied function to derive full path arrays
+ * curried function to derive full path arrays
  *
  * @param {Tree}
  * @returns {Function}
  *
- * The returned function accepts a single parameter:
  * @param {*} path Optional.
  * Defaults to an empty array.
  * 
@@ -1091,7 +947,7 @@ export function allKeysForPath(path) {
  * @throws elements in a path cannot be empty strings
  */
 export function deriveFullPath(tree) {
-  const { __dataMap, distinct, rootNodePath } = tree;
+  const { _dataMap, distinct, rootNodePath } = tree;
   return function (path = []) {
     validate(1, { path });
 
@@ -1111,13 +967,13 @@ export function deriveFullPath(tree) {
       : concat(rootNodePath, path);
 
     // return the node when it exists.
-    if (__dataMap.has(p2s(tree)(path))) return path;
+    if (_dataMap.has(p2s(tree)(path))) return path;
 
     // when path length is 2 (root + path) they might want a descendent
     if (distinct && path.length === 2) {
       const np = find(
         (k) => last(s2p(tree)(k)) === last(path),
-        [...__dataMap.keys()]
+        [..._dataMap.keys()]
       );
       if (np && !isEmpty(np)) path = s2p(tree)(np);
     }
@@ -1127,96 +983,192 @@ export function deriveFullPath(tree) {
 }
 
 /**
+ * provides descendent entries, optionally at the provided path, and below
+ *
+ * @param {Boolean} inclusive Optional.
+ * Defaults to false.
+ *
+ * When true, the entry for the path itself will be included.
+ *
+ * @param {Integer} depth Optional.
+ * Defaults to the maximum depth of the tree.
+ *
+ * An integer representing the maximum depth from the path.
+ * 
+ * @param {Tree} tree Required.
+ *
+ * @param {*} path Optional.
+ * Must be a String, pathStringDelimiter delimited String, or Array.
+ *
+ * When undefined, blank, or empty, the root node's path will be utilized.
+ *
+ * @returns an array of node entries
+ *
+ * @throws depth must be an integer
+ * @throws depth cannot be zero when inclusive is false
+ */
+export function descendents(inclusive, depth, tree, path) {
+  const { _dataMap, depth:treeDepth } = tree;
+  inclusive = inclusive ?? false;
+  validate(6, { depth });
+  validate(7, { depth, inclusive });
+  const fp = deriveFullPath(tree)(path);
+
+  function maxDepth(treeDepth, pathSize, depth) {
+      depth = depth + pathSize;
+      return (depth > treeDepth) ? treeDepth : depth ;
+  }
+
+  const md = isNil(depth) ? treeDepth : maxDepth(treeDepth, size(fp), depth);
+  const target = p2s(tree)(fp);
+  return flow(
+      filter(([sk, d]) => {
+          if (sk === target && !inclusive) return false;
+          if (size(s2p(tree)(sk)) > md) return false;
+          return startsWith(target, sk);
+      }),
+      map(([k, v]) => [s2p(tree)(k), v]) // NOTE not p2228t
+    )([..._dataMap.entries()]);
+};
+
+/**
+ * elaborates the set of paths for a full path
+ *
+ * @param {Array} path Required.
+ * 
+ * Must be a full path to a node
+ * 
+ * Defaults to an empty array.
+ *
+ * @returns {Array} a descending (from the root) array of paths to the node
+ */
+export function lineageForPath(path) {
+  return times((i) => take(add(1, i), path), path.length);
+};
+
+/**
+ * curried function to nest ancestors and descendents including keys, values, or both keys and values
+ * 
+ * @param {Function} keyFormatter Optional.
+ * 
+ * Function used to format keys.
+ * 
+ * Defaults to identity
+ * 
+ * 
+ * @param {String} only Optional.
+ * 
+ * One of: 'keys', 'values', or undefined
+ * 
+ * Defaults to undefined
+ * 
+ * Determines whether keys ('keys'), values('values'),
+ * or both keys and values(undefined) are included in the nested array
+ * 
+ * @param {Array} entries Optional.
+ * 
+ * An array of node entries
+ * 
+ * Defaults to an empty array
+ * 
+ */
+export const nest = curry(function (tree, keyFormatter, only, entries) {
+  keyFormatter = keyFormatter ?? identity;
+  entries = isNil(entries) ? [] : entries;
+
+  validate(19, { only });
+
+  const curDepth = flow(map(([fp, v]) => size(fp)),min)(entries);
+  const [cdn, ldn] = partition(([fp, v]) => size(fp) === curDepth, entries);
+
+  return map(([fp, v]) => {
+    const sk = p2s(tree)(fp);
+    const descendents = filter(([dfp, dv]) => startsWith(sk, p2s(tree)(dfp)))(ldn);
+    return (only === 'keys')
+      ? [ keyFormatter(fp), nest(tree, keyFormatter, only, descendents) ]
+      : (only === 'values')
+        ?  [ v, nest(tree, keyFormatter, only, descendents) ]
+        : [ keyFormatter(fp), v, nest(tree, keyFormatter, only, descendents) ]
+        ;
+  })(cdn);
+});
+
+
+/**
  * curried function to provide basic metadata about a node
  *
  * @param {Tree}
- * @returns {Function}
- *
- * The returned function accepts a single parameter:
  * @param {Array} path Required.
- * Defaults to an empty array.
- *
+ * 
  * A full node id path array.
- * @returns an object of metadata
+ * 
+ * @returns an object of fun metadata
  */
-export function meta(tree) {
+export const meta = curry(function (tree, path) {
   const { distinct } = tree;
-  return function (path = []) {
-    validate(1, { path });
-    const depth = tail(path).length;
-    const hasParent = depth > 0;
-    const parentPath = take(depth, path);
-    const distinctAncestor = distinct
-      ? hasParent
-        ? last(parentPath)
-        : undefined
-      : null;
-    return {
-      depth,
-      distinctAncestor,
-      hasParent,
-      parentPath,
-    };
+  validate(1, { path });
+  const depth = tail(path).length;
+  const hasParent = depth > 0;
+  const parentPath = take(depth, path);
+  const distinctAncestor = distinct
+    ? hasParent
+      ? last(parentPath)
+      : undefined
+    : null;
+  return {
+    depth,
+    distinctAncestor,
+    hasParent,
+    parentPath,
   };
-}
+});
 
 /**
  * curried function to provide either a full path or tip
  *
  * @param {Tree}
- * @returns {Function}
- *
- * The returned function accepts a single parameter:
- * @param {*} path Optional.
- * Defaults to an empty array.
+ * @param {*} path Required.
+ * 
+ * The full path to a node
  * 
  * @returns a single node id or a node id path array
  */
-export function p2228t(tree){
-  const { __dataMap, distinct, rootNodeId, showRoot } = tree;
-  return function (path = []) {
-    // probably unnecessary guard
-    validate(1, { path });
-    let p = isString(path) ? s2p(tree)(path) : path;
-    const show =
-      showRoot === "auto"
-        ? !!__dataMap.get(rootNodeId)
-        : showRoot === "yes";
+export const p2228t = curry(function (tree, path) {
+  const { _dataMap, distinct, hasRootDatum, rootNodePath, showRoot } = tree;
+  validate(1, { path });
+  let p = isString(path) ? s2p(tree)(path) : path;
+  const isRootPath = isEqual(rootNodePath, p);
+  const show =
+    showRoot === "auto"
+      ? hasRootDatum
+      : showRoot === "yes";
 
-    return distinct ? last(p) : show ? p : p.length === 1 ? [] : tail(p);
-  };
-}
+  return distinct ? last(p) : show ? p : isRootPath ? [] : tail(p);
+});
 
 /**
  * curried function to convert a path array to a string delimited with a pathStringDelimiter
  *
  * @param {Tree}
- * @returns {Function}
- *
- * The returned function accepts a single parameter:
  * @param {Array} pathArray Optional, Defaults to an empty string.
+ * 
  * @returns {String}
 */
-export function p2s(tree) {
+export const p2s = curry(function (tree, pathArray) {
   const { pathStringDelimiter:pathStringDelimiter } = tree;
-  return function (pathArray = []) {
-    return join(pathStringDelimiter, pathArray);
-  };
-}
+  return join(pathStringDelimiter, pathArray);
+});
 
 /**
  * curried function to convert a string delimited with a pathStringDelimiter to an array.
  *
  * @param {Tree}
- * @returns {Function}
- * 
- * The returned function accepts a single parameter:
  * @param {String} pathString Optional, Defaults to an empty string.
+ * 
  * @returns {Array}
  */
-export function s2p(tree) {
+export const s2p = curry(function (tree, pathString) {
   const { pathStringDelimiter:pathStringDelimiter } = tree;
-  return function (pathString = []) {
-    return split(pathStringDelimiter, pathString);
-  };
-}
+  return split(pathStringDelimiter, pathString);
+});
+

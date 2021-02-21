@@ -2,6 +2,13 @@ import { Tree } from "../tree";
 
 describe(`The everyOf method`, () => {
   // everyOf(fn, path, inclusive, depth,)
+  test(`throws an error when function argument is not a function`, () => {
+    const notAFunction = `blue`;
+    const tree = Tree.factory();
+    tree.set(["a"], { aintGotNoId: true });
+    expect(() => tree.everyOf(notAFunction, ["a"], false, 0)).toThrow();
+  });
+
   test(`throws an error when depth is not an integer`, () => {
     const hasAnId = ([k, v]) => (v ? v.id && v.id.length : false);
     const tree = Tree.factory();
@@ -20,8 +27,6 @@ describe(`The everyOf method`, () => {
     tree.set(["a"], { aintGotNoId: true });
     expect(() => tree.everyOf(hasAnId, ["a"], false, 0)).toThrow();
   });
-
-  // TODO: throws on invalid fn (new truthy fn default), inclusive
 
   describe(`for trees which have non-distinct node Ids`, () => {
     describe(`where inclusive is true`, () => {
