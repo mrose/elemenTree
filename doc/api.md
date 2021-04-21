@@ -29,6 +29,7 @@ A Tree objectThe Tree object is a tree of nodes where each node is a key-value
             * [.valuesOf(path, inclusive, nested, depth)](#module_Tree--Tree+valuesOf) ⇒ <code>Array</code>
         * _static_
             * [.factory()](#module_Tree--Tree.factory)
+            * [.s2p(tree, pathString)](#module_Tree--Tree.s2p) ⇒ <code>function</code> \| <code>Array</code>
         * _inner_
             * [~FactoryOptions](#module_Tree--Tree..FactoryOptions) : <code>Object</code>
 
@@ -51,10 +52,10 @@ The path_string_delimiter, root_node_id, and distinct properties are set in the 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | datum | <code>\*</code> |  | Optional. Defaults to undefined. |
-| root_node_id | <code>String</code> |  | Optional.  Defaults to "root". |
+| root_node_id | <code>String</code> |  | Optional. Defaults to "root". |
 | path_string_delimiter | <code>String</code> |  | Optional. Defaults to a pipe '|'. |
 | dataMap | <code>Map</code> |  | Optional. Defaults to a Map. |
-| distinct | <code>Boolean</code> | <code>true</code> | Optional.  Defaults to True. |
+| distinct | <code>Boolean</code> | <code>true</code> | Optional. Defaults to True. |
 | show_root | <code>String</code> | <code>auto</code> | Optional. Defaults to 'auto'. |
 
 <a name="module_Tree--Tree+depth"></a>
@@ -95,7 +96,7 @@ Apply a function to a node's descendents, and optionally to the node itself.NO
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| fn | <code>function</code> |  | Optional. Defaults to _.identity. The function to apply to each node; receives an entry and tree as arguments. The function MUST return a [path, datum] entry or undefined. |
+| fn | <code>function</code> |  | Optional. Defaults to identity. The function to apply to each node; receives an entry and tree as arguments. The function MUST return a [path, datum] entry or undefined. |
 | path | <code>\*</code> |  | Optional. Must be a String, path_string_delimiter delimited String, or Array. When undefined, blank, or empty, the root node's path will be utilized. |
 | inclusive | <code>Boolean</code> | <code>false</code> | Optional. Defaults to false. When true, the entry for the path itself will also be provided to the function. |
 
@@ -157,7 +158,7 @@ Tests whether all qualifying entries pass the test implemented by the provided f
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| fn | <code>function</code> |  | Optional. Defaults to _.identity. The function to apply to each node which should return truthy or falsey. |
+| fn | <code>function</code> |  | Optional. Defaults to identity. The function to apply to each node which should return truthy or falsey. |
 | path | <code>\*</code> |  | Optional. Must be a String, path_string_delimiter delimited String, or Array. When undefined, blank, or empty, the root node's path will be utilized. |
 | inclusive | <code>Boolean</code> | <code>false</code> | Optional. Defaults to false. When True, the entry for the path itself will also be provided to the function. |
 | depth | <code>integer</code> |  | Optional. Defaults to the maximum depth of the tree. An integer representing the maximum depth from the path. |
@@ -277,8 +278,8 @@ Append or update a datum at the path provided.NOTE: When the path argument is 
 
 - path must be a simple string (when the ancestor provided is not a simple string)
 - elements in a path cannot be empty strings
-- ancestor does not exist (when the ancestor is provided is not in the tree)
-- ancestor cannot be used on distinct trees, full node id paths are required
+- ancestor does not exist (when the ancestor provided is not in the tree)
+- ancestor argument cannot be used to set nodes on distinct trees, full node id paths are required
 - ancestor must be a simple string or single element array
 - path already exists in this distinct tree
 - elements in a path cannot be duplicated with distinct trees
@@ -307,7 +308,7 @@ Tests whether at least one qualifying datum passes the test implemented by the p
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| fn | <code>function</code> |  | Optional. Defaults to _.identity. The function to apply to each node, which should return truthy or falsey. |
+| fn | <code>function</code> |  | Optional. Defaults to identity. The function to apply to each node, which should return truthy or falsey. |
 | path | <code>\*</code> |  | Optional. Must be a String, path_string_delimiter delimited String, or Array. When undefined, blank, or empty, the root node's path will be utilized. |
 | inclusive | <code>Boolean</code> | <code>false</code> | Optional. Defaults to False. When True, the entry for the path itself will also be provided to the function. |
 | depth | <code>integer</code> |  | Optional. Defaults to the maximum depth of the tree. An integer representing the maximum depth from the path. |
@@ -327,7 +328,7 @@ Apply a function to each node in a path in a specified order.
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| fn | <code>function</code> |  | Optional. Defaults to _identity. The function to apply to each node; receives an entry and tree as arguments. MUST return a [path, datum] entry or undefined. |
+| fn | <code>function</code> |  | Optional. Defaults to identity. The function to apply to each node; receives an entry and tree as arguments. MUST return a [path, datum] entry or undefined. |
 | path | <code>\*</code> |  | Optional. Must be a String, path_string_delimiter delimited String, or Array. When undefined, blank, or empty, the root node's path will be utilized. |
 | order | <code>enum</code> | <code>desc</code> | Optional. Defaults to "desc". One of "asc"|"desc". NOTE: "desc" means from the root towards descendents. |
 
@@ -363,6 +364,19 @@ Factory method to create a new Tree.The factory method is favored over direct 
 | Param | Type | Description |
 | --- | --- | --- |
 | Optional. | <code>FactoryOptions</code> | See constructor for object contents. |
+
+<a name="module_Tree--Tree.s2p"></a>
+
+#### Tree.s2p(tree, pathString) ⇒ <code>function</code> \| <code>Array</code>
+curried function to convert a string delimited with a pathStringDelimiter to an array.
+
+**Kind**: static method of [<code>Tree</code>](#exp_module_Tree--Tree)  
+**Returns**: <code>function</code> - The function returned accepts a single parameter:<code>Array</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| tree | <code>Tree</code> |  |
+| pathString | <code>String</code> | Optional, Defaults to an empty string. |
 
 <a name="module_Tree--Tree..FactoryOptions"></a>
 

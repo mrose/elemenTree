@@ -40,6 +40,7 @@ describe(`The valuesOf method`, () => {
       expect(tree.valuesOf("a|b")).toEqual([]);
     });
 
+    // (path, inclusive, nested, depth)
     test(`returns a single entry when no descendents exist and inclusive is true`, () => {
       const tree = Tree.factory({ datum: { id: "root" }, distinct: false });
       expect(tree.valuesOf(undefined, true)).toEqual([{ id: "root" }]);

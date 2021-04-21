@@ -36,9 +36,8 @@ describe(`The set method`, () => {
 
     test(`throws an error when ancestor argument is used but ancestor does not exist`, () => {
       const tree = Tree.factory({ distinct: true });
-      const ancestor = "b";
-      tree.set("a", { id: "a", value: 2 });
-      expect(() => tree.set("c", { id: "c", value: 4 }, ancestor)).toThrow(
+      const ancestor = "a";
+      expect(() => tree.set("b", { id: "b", value: 3 }, ancestor)).toThrow(
         `ancestor ${ancestor} does not exist`
       );
     });
@@ -229,12 +228,12 @@ describe(`The set method`, () => {
       expect(tree.get(["root"])).toEqual({ id: "root", value: 0 });
       tree.clear();
 
-      // root datum is undefined, show_root is auto so is no
+      // root datum is undefined, showRoot is auto so is no
       rtrn = tree.set("a", { id: "a", value: 1 });
       expect(tree.get(["a"])).toEqual({ id: "a", value: 1 });
       expect(rtrn).toEqual(["a"]);
 
-      tree.show_root = "yes";
+      tree.showRoot = "yes";
       rtrn = tree.set("a", { id: "a", value: 1 });
       expect(tree.get(["a"])).toEqual({ id: "a", value: 1 });
       expect(rtrn).toEqual(["root", "a"]);
@@ -292,24 +291,24 @@ describe(`The set method`, () => {
       rtrn = tree.set("a|b|c", { id: "c", value: 3 });
 
       // using full path is always ok
-      tree.show_root = "yes";
+      tree.showRoot = "yes";
       rtrn = tree.set(["a", "b", "c"], { id: "c", value: 13 });
       expect(rtrn).toEqual(["root", "a", "b", "c"]);
       expect(tree.get("a|b|c")).toEqual({ id: "c", value: 13 });
 
-      tree.show_root = "auto";
+      tree.showRoot = "auto";
       rtrn = tree.set(["a", "b", "c"], { id: "c", value: 13 });
       expect(rtrn).toEqual(["a", "b", "c"]);
       expect(tree.get("a|b|c")).toEqual({ id: "c", value: 13 });
 
       // alternate syntax
       // for kicks we used a duplicate node id
-      tree.show_root = "yes";
+      tree.showRoot = "yes";
       rtrn = tree.set("a|b|a", { id: "c", value: 23 });
       expect(rtrn).toEqual(["root", "a", "b", "a"]);
       expect(tree.get(["a", "b", "a"])).toEqual({ id: "c", value: 23 });
 
-      tree.show_root = "no";
+      tree.showRoot = "no";
       rtrn = tree.set(["a", "b", "c"], { id: "c", value: 33 });
       expect(rtrn).toEqual(["a", "b", "c"]);
       expect(tree.get(["a", "b", "c"])).toEqual({ id: "c", value: 33 });

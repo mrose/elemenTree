@@ -7,10 +7,11 @@ import _isEqual from "lodash/isEqual";
 import _isString from "lodash/isString";
 import _head from "lodash/head";
 import _last from "lodash/last";
-import _join from "lodash/join";
-import _split from "lodash/split";
 import _tail from "lodash/take";
 import _take from "lodash/take";
+
+import join from "lodash/fp/join";
+import split from "lodash/fp/split";
 
 // TODO: flatten & meta tests
 
@@ -93,12 +94,15 @@ export function meta(path, tree) {
 }
 
 /**
- * convert an array to a delimited string
+ * convert a path array to a string delimited with a pathStringDelimiter
+ *
  * @access private
- * @param {array} path
+ * @param {String} pathStringDelimiter Optional, Defaults to a pipe '|'.
+ * @param {Array} arrayPath Optional, Defaults to an empty string.
+ * @returns {String}
  */
-export function p2s(tree, path = []) {
-  return _join(path, tree.path_string_delimiter);
+export function p2s(pathStringDelimiter = "|", arrayPath = []) {
+  return join(pathStringDelimiter, arrayPath);
 }
 
 export function p2228t(tree, path = []) {
@@ -112,12 +116,15 @@ export function p2228t(tree, path = []) {
 }
 
 /**
- * convert a delimited string to an array
+ * convert a string delimited with a pathStringDelimiter to an array.
+ *
  * @access private
- * @param {string} pathString (delimited)
+ * @param {String} pathStringDelimiter Optional, Defaults to a pipe '|'.
+ * @param {String} stringPath Optional, Defaults to an empty string.
+ * @returns {Array}
  */
-export function s2p(tree, pathString = "") {
-  return _split(pathString, tree.path_string_delimiter);
+export function s2p(pathStringDelimiter = "|", stringPath = "") {
+  return split(pathStringDelimiter, stringPath);
 }
 
 /**
@@ -134,4 +141,37 @@ export function setIntermediates(tree, path) {
     let k = p2s(_take(path, i + 1));
     if (!tree.__dataMap.has(k)) tree.__dataMap.set(k, undefined);
   });
+}
+
+/**
+ * Internal method to throw a defined exception.
+ *
+ * @access private
+ * @param {Integer} id Required. The id of the message.
+ * @param {Object} key/value pairs needed for message rendering.
+ * @throws {Error} exception with formatted message.
+ *
+ */
+export function treeException(id, opts = {}) {
+  const m = {
+    1: `path must be an array or a string`,
+    2: `elements in a path cannot be empty strings`,
+    3: `show_root must be one of: 'yes', 'no', or 'auto`,
+    4: `path ${opts.path} does not exist, use has?`,
+    5: `function provided must return a node entry`,
+    6: `depth must be an integer`,
+    7: `depth cannot be zero when inclusive is false`,
+    8: `no ancestor exists for ${opts.path}`,
+    9: `non distinct trees cannot be merged into distinct trees`,
+    10: `ancestor must be a simple string or single element array`,
+    11: `ancestor ${opts.ancestor} cannot be used on non-distinct trees, full node id path for ${opts.path} is required`,
+    12: `path ${opts.path} already exists in this distinct tree with ancestor ${opts.ancestor}`,
+    14: `path must be a simple string, received ${opts.path}, ${opts.datum}, ${opts.ancestor}`,
+    15: `ancestor ${opts.ancestor} does not exist`,
+    16: `elements in path ${opts.path} cannot be duplicated with distinct trees`,
+    17: `order must be one of "asc, desc", was ${opts.order}`,
+    42: `all persons more than a mile high to leave the court`,
+  };
+  const e = id in m ? m[id] : "invalid exception";
+  throw new Error(e);
 }
